@@ -1,13 +1,26 @@
 package de.htwg_konstanz.ebus.wholesaler.main;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
+import javax.servlet.ServletContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOProduct;
+import de.htwg_konstanz.ebus.framework.wholesaler.api.boa.ProductBOA;
 
 public class Export {
 
@@ -17,11 +30,42 @@ public class Export {
 	 * exports the whole Catalog
 	 * @return 
 	 */
-	public static String exportAll(ArrayList<String> errorList){
+	public static Document exportAll(ArrayList<String> errorList){
+		Document doc= null;
+		try {
+			 doc = createBasisDOM();
+			 doc = getAllArcticles(doc);
+		} catch (ParserConfigurationException e) {
+			System.out.println("Error in DOM Basis creation");
+			e.printStackTrace();
+		}
 		
+		
+		return doc;
 	}
 	
-	public Document createBasisDOM() throws ParserConfigurationException{
+	public static String makeFile(Document doc, ServletContext context){
+		String path="catalog_export.XML";
+		File file=null;
+
+		try {
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			DOMSource source = new DOMSource(doc);
+			file = new File(context.getRealPath(path));
+			StreamResult result = new StreamResult(file);
+			transformer.transform(source, result);
+		} catch (TransformerConfigurationException e) {
+			System.out.println("Configuration Error while transforming");
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			System.out.println("Error while transforming");
+			e.printStackTrace();
+		}
+		return path;
+	}
+	
+	public static Document createBasisDOM() throws ParserConfigurationException{
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document document = db.newDocument();
@@ -92,14 +136,14 @@ public class Export {
 		//Create T_NEW_CATALOG-Element
 		Element t_new_catalog = document.createElement("T_NEW_CATALOG");
 		//Append T_NEW_CATALOG to "HEADER"
-		header.appendChild(t_new_catalog);
+		root.appendChild(t_new_catalog);
 		
 		return document;
 	}
 	
-	public Document createArticleDOM(Document document){
+	public static Document createArticleDOM(Document document, BOProduct bop){
 		
-		Element t_new_catalog = (Element) document.getElementsByTagName("T_NEW_CATALOG");
+		Node t_new_catalog = document.getElementsByTagName("T_NEW_CATALOG").item(0);
 		
 		//Create ARTICLE-Element
 		Element article = document.createElement("ARTICLE");
@@ -107,10 +151,12 @@ public class Export {
 		
 		//Create SUPPLIER_AID-Element
 		Element supplier_aid = document.createElement("SUPPLIER_AID");
+		//Insert content for SUPPLIER_AID
+		supplier_aid.insertBefore(document.createTextNode(bop.getOrderNumberSupplier()), supplier_aid.getLastChild());
 		//Append SUPPLIER_AID to "ARTICLE"
 		article.appendChild(supplier_aid);
 		
-		/** Hier muss über den Datenbankzugriff die entsprechende Supplier_AID herausgelesen werden */
+		/** Hier muss ï¿½ber den Datenbankzugriff die entsprechende Supplier_AID herausgelesen werden */
 		
 		
 		//Create ARTICLE_DETAILS-Element
@@ -120,16 +166,22 @@ public class Export {
 		
 		//Create DESCRIPTION_SHORT-Element
 		Element description_short = document.createElement("DESCRIPTION_SHORT");
+		//Insert content for DESCRIPTION_SHORT
+		description_short.insertBefore(document.createTextNode(bop.getShortDescription()), description_short.getLastChild());
 		//Append DESCRIPTION_SHORT to "ARTICLE_DETAILS"
 		article_details.appendChild(description_short);
 		
 		//Create DESCRIPTION_LONG-Element
 		Element description_long = document.createElement("DESCRIPTION_LONG");
+		//Insert content for DESCRIPTION_LONG
+		description_long.insertBefore(document.createTextNode(bop.getLongDescription()), description_long.getLastChild());
 		//Append DESCRIPTION_LONG to "ARTICLE_DETAILS"
 		article_details.appendChild(description_long);
 		
 		//Create EAN-Element
 		Element ean = document.createElement("EAN");
+		//Insert content for EAN
+		ean.insertBefore(document.createTextNode("000"), ean.getLastChild());
 		//Append EAN to "ARTICLE_DETAILS"
 		article_details.appendChild(ean);
 		
@@ -140,21 +192,35 @@ public class Export {
 		
 		//Create ORDER_UNIT-Element
 		Element order_unit = document.createElement("ORDER_UNIT");
+		//Insert content for ORDER_UNIT
+		order_unit.insertBefore(document.createTextNode("000"), order_unit.getLastChild());
 		//Append ORDER_UNIT to "ARTICLE_ORDER_DETAILS"
 		article_order_details.appendChild(order_unit);
 		
 		//Create CONTENT_UNIT-Element
 		Element content_unit = document.createElement("CONTENT_UNIT");
+		//Insert content for CONTENT_UNIT
+//Optional	order_unit.insertBefore(document.createTextNode("000"), order_unit.getLastChild());
 		//Append CONTENT_UNIT to "ARTICLE_ORDER_DETAILS"
 		article_order_details.appendChild(content_unit);
 		
 		//Create NO_CU_PER_OU-Element
 		Element no_cu_per_ou = document.createElement("NO_CU_PER_OU");
+		//Insert content for NO_CU_PER_OU
+//Optional	order_unit.insertBefore(document.createTextNode("000"), order_unit.getLastChild());
 		//Append NO_CU_PER_OU to "ARTICLE_ORDER_DETAILS"
 		article_order_details.appendChild(no_cu_per_ou);
 		
 		return document;
 		
+	}
+	
+	public static Document getAllArcticles(Document document){
+		List<BOProduct> productList = ProductBOA.getInstance().findAll();
+		for(BOProduct bop : productList){
+			document = createArticleDOM(document, bop);
+		}
+		return document;
 	}
 	
 	public Document createArticlePriceDOM(Document document){

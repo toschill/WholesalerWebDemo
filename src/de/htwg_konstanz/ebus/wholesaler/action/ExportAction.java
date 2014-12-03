@@ -1,13 +1,14 @@
 package de.htwg_konstanz.ebus.wholesaler.action;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import de.htwg_konstanz.ebus.framework.wholesaler.api.boa.ProductBOA;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.security.Security;
+import de.htwg_konstanz.ebus.wholesaler.demo.ControllerServlet;
 import de.htwg_konstanz.ebus.wholesaler.demo.IAction;
 import de.htwg_konstanz.ebus.wholesaler.demo.LoginBean;
 import de.htwg_konstanz.ebus.wholesaler.demo.util.Constants;
@@ -19,7 +20,7 @@ public class ExportAction implements IAction{
 	public String execute(HttpServletRequest request,
 			HttpServletResponse response, ArrayList<String> errorList) {
 		// get the login bean from the session
-				LoginBean loginBean = (LoginBean)request.getSession(true).getAttribute(PARAM_LOGIN_BEAN);
+				LoginBean loginBean = (LoginBean)request.getSession(true).getAttribute(Constants.PARAM_LOGIN_BEAN);
 
 				// ensure that the user is logged in
 				if (loginBean != null && loginBean.isLoggedIn())
@@ -30,7 +31,12 @@ public class ExportAction implements IAction{
 					if (Security.getInstance().isUserAllowed(loginBean.getUser(), Security.RESOURCE_ALL, Security.ACTION_READ))
 					{
 						
-						return Export.exportAll();
+						// Export.exportAll();
+						ServletContext context = request.getSession().getServletContext();
+						String path = Export.makeFile(Export.exportAll(errorList),context);
+						//Set Parameter in Session
+						request.getSession(true).setAttribute(Constants.PARAM_EXPORT, path);
+						 return "export.jsp";
 					}
 					else
 					{
@@ -44,10 +50,17 @@ public class ExportAction implements IAction{
 				else
 					// redirect to the login page
 					return "login.jsp";				
-			}
-		return null;
+		
 	}
 
+/**
+ * Each action itself decides if it is responsible to process the corrensponding request or not.
+ * This means that the {@link ControllerServlet} will ask each action by calling this method if it
+ * is able to process the incoming action request, or not.
+ * 
+ * @param actionName the name of the incoming action which should be processed
+ * @return true if the action is responsible, else false
+ */
 	@Override
 	public boolean accepts(String actionName) {
 		
