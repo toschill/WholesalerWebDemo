@@ -159,5 +159,45 @@ public class Export {
 	
 	public Document createArticlePriceDOM(Document document){
 		
+		//Get ARTICLE_PRICE_DETAILS-Element from document
+		Element article_price_details = (Element) document.getElementsByTagName("ARTICLE_PRICE_DETAILS");
+		
+		
+		//Create ARICLE_PRICE-Element
+		Element article_price = document.createElement("ARTICLE_PRICE");
+		//Set Attribut to ARTICLE_PRICE
+		article_price.setAttribute("price_type", "--- Insert Attribute Value here! ---");
+		//Append ARTICLE_PRICE to "ARTICLE_PRICE_DETAILS"
+		article_price_details.appendChild(article_price);
+		
+		//Create PRICE_AMOUNT-Element
+		Element price_amount = document.createElement("PRICE_AMOUNT");
+		//Append PRICE_AMOUNT to "ARTICLE_PRICE"
+		article_price.appendChild(price_amount);
+				
+		//Create PRICE_CURRENCY-Element
+		Element price_currency = document.createElement("PRICE_CURRENCY");
+		//Append PRICE_CURRENCY to "ARTICLE_PRICE"
+		article_price.appendChild(price_currency);
+		
+		//Create TAX-Element
+		Element tax = document.createElement("TAX");
+		//Append TAX to "ARTICLE_PRICE"
+		article_price.appendChild(tax);
+		
+		
+		return document;	
 	}
+	
+	public Document createTerritoryDOM(Document document){
+		
+		//Get ARTICLE_PRICEElement from document
+		Element article_price = (Element) document.getElementsByTagName("ARTICLE_PRICE");
+		
+		//Create TERRITORY
+		
+		
+		return document;		
+	}
+	
 }
