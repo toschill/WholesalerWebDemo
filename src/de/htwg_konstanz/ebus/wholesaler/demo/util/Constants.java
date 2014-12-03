@@ -27,7 +27,10 @@ public class Constants
 	public static final String ACTION_UPDATE_WS_SETTINGS = "updateWsSettings";
 	//Constants for Import and Export
 	public static final String ACTION_IMPORT = "import";
+	
 	public static final String ACTION_EXPORT = "export";
+	public static final String PARAM_EXPORT = "exportParam";
+
 	
     public static final String PARAM_SUPPLIER = "supplier";
     public static final String PARAM_CUSTOMER = "customer";
