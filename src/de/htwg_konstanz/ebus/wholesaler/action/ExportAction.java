@@ -40,15 +40,12 @@ public class ExportAction implements IAction{
 							if("BMECAT".equals(view)){
 								//User wants BMECAT
 								String path = Export.makeFile(Export.exportAll(errorList),context, loginBean.getUser().getId(), errorList);
-								//Set Parameter in Session
-								//request.getSession(true).setAttribute(Constants.PARAM_EXPORT, path);
 								if(errorList.isEmpty()){
 									return path;
 								}
 							}
 							if(("XHTML").equals(view)){
 								//User wants XHTML
-								//request.getSession(true).setAttribute(Constants.PARAM_EXPORT, "xhtml");
 								String path = Export.makeFile(Export.exportXhtml(errorList), context, loginBean.getUser().getId(), errorList);
 								if(errorList.isEmpty()){
 									return path;
@@ -58,9 +55,9 @@ public class ExportAction implements IAction{
 						else{
 							//Search string was entered 
 							if("BMECAT".equals(view)){
-								//TODO
+								String path = Export.makeFile(Export.exportSearch(errorList, search), context, loginBean.getUser().getId(), errorList);
 								if(errorList.isEmpty()){
-									return null;
+									return path;
 								}
 							}
 							if(("XHTML").equals(view)){

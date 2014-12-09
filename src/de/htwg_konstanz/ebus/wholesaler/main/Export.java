@@ -52,7 +52,7 @@ public class Export {
 		Document doc= null;
 		try {
 			 doc = createBasisDOM();
-			 doc = getSelectedArticle(doc, search);
+			 doc = getSelectedArticle(doc, search, errorList);
 		} catch (ParserConfigurationException e) {
 			errorList.add("Error in DOM Basis creation");
 			e.printStackTrace();
@@ -278,12 +278,17 @@ public class Export {
 	 * @param Document The BMECAT Document
 	 * @return The Document with articles added
 	 */
-	public static Document getSelectedArticle(Document document, String search){
+	public static Document getSelectedArticle(Document document, String search, ArrayList<String> errorList){
 		List<BOProduct> productList = ProductBOA.getInstance().findAll();
+		Boolean foundOne=false;
 		for(BOProduct bop : productList){
-			if(bop.getShortDescription().contains(search)){
+			if(bop.getShortDescription().toLowerCase().contains(search.toLowerCase())){
+				foundOne=true;
 				document = createArticleDOM(document, bop);
 			}
+		}
+		if(!foundOne){
+			errorList.add("Es wurde kein Artikel gefunden, dessen Kurzbeschreibung " +search+ " enthält");
 		}
 		return document;
 	}
