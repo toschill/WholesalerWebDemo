@@ -257,7 +257,7 @@ public class Export {
 	
 	public Document createTerritoryDOM(Document document){
 		
-		//Get ARTICLE_PRICEElement from document
+		//Get ARTICLE_PRICE Element from document
 		Element article_price = (Element) document.getElementsByTagName("ARTICLE_PRICE");
 		
 		//Create TERRITORY
