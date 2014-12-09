@@ -30,12 +30,47 @@ public class ExportAction implements IAction{
 					// -> use the "Security.RESOURCE_ALL" constant which includes all resources.
 					if (Security.getInstance().isUserAllowed(loginBean.getUser(), Security.RESOURCE_ALL, Security.ACTION_READ))
 					{
-						
-						// Export.exportAll();
+						//get ServletContext for relative path
 						ServletContext context = request.getSession().getServletContext();
-						String path = Export.makeFile(Export.exportAll(errorList),context, loginBean.getUser().getId());
-						//Set Parameter in Session
-						request.getSession(true).setAttribute(Constants.PARAM_EXPORT, path);
+						//get the Parameters
+						String search = request.getParameter(Constants.ACTION_EXPORT_SEARCH);
+						String view = request.getParameter(Constants.ACTION_EXPORT_VIEW);
+						if(search == null||search==""){
+							//there was no search string entered
+							if("BMECAT".equals(view)){
+								//User wants BMECAT
+								String path = Export.makeFile(Export.exportAll(errorList),context, loginBean.getUser().getId(), errorList);
+								//Set Parameter in Session
+								//request.getSession(true).setAttribute(Constants.PARAM_EXPORT, path);
+								if(errorList.isEmpty()){
+									return path;
+								}
+							}
+							if(("XHTML").equals(view)){
+								//User wants XHTML
+								//request.getSession(true).setAttribute(Constants.PARAM_EXPORT, "xhtml");
+								String path = Export.makeFile(Export.exportXhtml(errorList), context, loginBean.getUser().getId(), errorList);
+								if(errorList.isEmpty()){
+									return path;
+								}
+							}
+						}
+						else{
+							//Search string was entered 
+							if("BMECAT".equals(view)){
+								//TODO
+								if(errorList.isEmpty()){
+									return null;
+								}
+							}
+							if(("XHTML").equals(view)){
+								//TODO
+								if(errorList.isEmpty()){
+									return null;
+								}
+							}
+						}
+						//when there is an error in errorList or when no parameter is passed
 						 return "export.jsp";
 					}
 					else

@@ -19,7 +19,32 @@
 <%@ include file="navigation.jspfragment" %>
 
 <h1>Export: Export Product Catalog</h1>
-<a href="${sessionScope.exportParam}">Download</a>
+<table>
+	<tr>
+		<td>Whole Catalog</td>
+		<td><a href="<%= response.encodeURL("controllerservlet?action=export&view=BMECAT") %>">BMECAT</a></td>
+		<td><a href="<%= response.encodeURL("controllerservlet?action=export&view=XHTML") %>">xhtml</a></td>
+	</tr>
+	<tr>
+	
+		<td>
+		<form id="searchForm" method="post" action="controllerservlet?action=export">
+			<input type="hidden" name="view" id="view"/>
+			<input type="text" name="search"/>
+			
+		</form> 
+		</td>
+		<script>
+			function submitScript(view) {
+				document.getElementById("view").value = view;
+				document.getElementById("searchForm").submit();
+			}
+		</script>
+		<td><a onclick="submitScript('BMECAT');">BMECAT</a></td>
+		<td><a href="<%= response.encodeURL("controllerservlet?action=export&view=XHTML") %>">xhtml</a></td>
+	</tr>
+</table>
+
 
 <p>
 <input type=button name=go-back value=" back " onclick="javascript:history.back()">

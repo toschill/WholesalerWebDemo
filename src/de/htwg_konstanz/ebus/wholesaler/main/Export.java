@@ -36,16 +36,50 @@ public class Export {
 			 doc = createBasisDOM();
 			 doc = getAllArcticles(doc);
 		} catch (ParserConfigurationException e) {
-			System.out.println("Error in DOM Basis creation");
+			errorList.add("Error in DOM Basis creation");
 			e.printStackTrace();
 		}
-		
-		
 		return doc;
 	}
 	
-	public static String makeFile(Document doc, ServletContext context, Integer integer){
-		String path="catalog_export.XML";
+	/**
+	 * exports the Catalog with Articles that match search
+	 * @param errorList The ErrorList to inform user
+	 * @param search The Serch string
+	 * @return BMECAT conform document
+	 */
+	public static Document exportSearch(ArrayList<String> errorList, String search){
+		Document doc= null;
+		try {
+			 doc = createBasisDOM();
+			 doc = getSelectedArticle(doc, search);
+		} catch (ParserConfigurationException e) {
+			errorList.add("Error in DOM Basis creation");
+			e.printStackTrace();
+		}
+		return doc;
+	}
+	
+	public static Document exportXhtml(ArrayList<String> errorList) {
+		Document doc=null;
+		try {
+			doc = createBasisDOM();
+		} catch (ParserConfigurationException e) {
+			errorList.add("Error in DOM Basis creation");
+			e.printStackTrace();
+		}
+		return doc;
+	}
+	/**
+	 * Writes Document into File
+	 * @param doc The Document that should be transformed 
+	 * @param context The ServletContext to get the relative path
+	 * @param userId The userId is needed for the filename
+	 * @param errorList The errorList to inform User in case of error
+	 * @return the Path to the File
+	 */
+	public static String makeFile(Document doc, ServletContext context, Integer userId, ArrayList<String> errorList){
+		String path="catalog_export"+userId+".XML";
 		File file=null;
 		try {
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -55,16 +89,21 @@ public class Export {
 			StreamResult result = new StreamResult(file);
 			transformer.transform(source, result);
 		} catch (TransformerConfigurationException e) {
-			System.out.println("Configuration Error while transforming");
+			errorList.add("Configuration Error while transforming");
 			e.printStackTrace();
 		} catch (TransformerException e) {
-			System.out.println("Error while transforming");
+			errorList.add("Error while transforming");
 			e.printStackTrace();
 		}
 		
 		return path;
 	}
 	
+	/**
+	 * Adds the Header to the Document -> BMECAT comform
+	 * @return document the Document where the Header should be added
+	 * @throws ParserConfigurationException
+	 */
 	public static Document createBasisDOM() throws ParserConfigurationException{
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
@@ -141,6 +180,13 @@ public class Export {
 		return document;
 	}
 	
+	/**
+	 * Adds Produktinformation as Artikel to the Document -> BMECAT conform
+	 * DOCUMENT NEEDS A T_NEW_CATALOG Attribute
+	 * @param document The BMECAT Document where the Produkt should be added
+	 * @param bop The Product
+	 * @return
+	 */
 	public static Document createArticleDOM(Document document, BOProduct bop){
 		
 		Node t_new_catalog = document.getElementsByTagName("T_NEW_CATALOG").item(0);
@@ -213,6 +259,11 @@ public class Export {
 		
 	}
 	
+	/**
+	 * Iterates over all Artikles in the DB and calls the createArticleDOM Method
+	 * @param Document The BMECAT Document
+	 * @return The Document with articles added
+	 */
 	public static Document getAllArcticles(Document document){
 		List<BOProduct> productList = ProductBOA.getInstance().findAll();
 		for(BOProduct bop : productList){
@@ -221,6 +272,28 @@ public class Export {
 		return document;
 	}
 	
+	/**
+	 * Iterates over all Articles in the DB and calls the createArticleDOM Method 
+	 * for the one where the shortDescription contains the search query
+	 * @param Document The BMECAT Document
+	 * @return The Document with articles added
+	 */
+	public static Document getSelectedArticle(Document document, String search){
+		List<BOProduct> productList = ProductBOA.getInstance().findAll();
+		for(BOProduct bop : productList){
+			if(bop.getShortDescription().contains(search)){
+				document = createArticleDOM(document, bop);
+			}
+		}
+		return document;
+	}
+	
+	/**
+	 * Adds Price Data to a BMECAT conform Document
+	 * DOCUMENT ALREADY NEEDS A ARTICLE_PRICE_DETAILS TAG
+	 * @param document The BMECAT Document
+	 * @return The Document with article price details added
+	 */
 	public Document createArticlePriceDOM(Document document){
 		
 		//Get ARTICLE_PRICE_DETAILS-Element from document
@@ -263,5 +336,7 @@ public class Export {
 		
 		return document;		
 	}
+
+	
 	
 }
