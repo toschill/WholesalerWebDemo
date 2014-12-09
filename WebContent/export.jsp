@@ -41,7 +41,7 @@
 			}
 		</script>
 		<td><a onclick="submitScript('BMECAT');">BMECAT</a></td>
-		<td><a href="<%= response.encodeURL("controllerservlet?action=export&view=XHTML") %>">xhtml</a></td>
+		<td><a onclick="submitScript('XHTML');">xhtml</a></td>
 	</tr>
 </table>
 

@@ -35,18 +35,21 @@ public class ExportAction implements IAction{
 						//get the Parameters
 						String search = request.getParameter(Constants.ACTION_EXPORT_SEARCH);
 						String view = request.getParameter(Constants.ACTION_EXPORT_VIEW);
+						int userId=loginBean.getUser().getId();
+						
 						if(search == null||search==""){
 							//there was no search string entered
 							if("BMECAT".equals(view)){
 								//User wants BMECAT
-								String path = Export.makeFile(Export.exportAll(errorList),context, loginBean.getUser().getId(), errorList);
+								String path = Export.makeFile(Export.exportAll(errorList),context, userId, errorList);
 								if(errorList.isEmpty()){
 									return path;
 								}
 							}
 							if(("XHTML").equals(view)){
 								//User wants XHTML
-								String path = Export.makeFile(Export.exportXhtml(errorList), context, loginBean.getUser().getId(), errorList);
+								String path = Export.makeFile(Export.exportAll(errorList), context, userId, errorList);
+								path = Export.convertToXhtml(path, context, userId, errorList);
 								if(errorList.isEmpty()){
 									return path;
 								}
@@ -55,15 +58,16 @@ public class ExportAction implements IAction{
 						else{
 							//Search string was entered 
 							if("BMECAT".equals(view)){
-								String path = Export.makeFile(Export.exportSearch(errorList, search), context, loginBean.getUser().getId(), errorList);
+								String path = Export.makeFile(Export.exportSearch(errorList, search), context, userId, errorList);
 								if(errorList.isEmpty()){
 									return path;
 								}
 							}
 							if(("XHTML").equals(view)){
-								//TODO
+								String path = Export.makeFile(Export.exportSearch(errorList, search), context, userId, errorList);
+								path = Export.convertToXhtml(path, context, userId, errorList);
 								if(errorList.isEmpty()){
-									return null;
+									return path;
 								}
 							}
 						}

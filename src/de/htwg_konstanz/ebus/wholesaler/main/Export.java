@@ -14,6 +14,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -60,16 +61,26 @@ public class Export {
 		return doc;
 	}
 	
-	public static Document exportXhtml(ArrayList<String> errorList) {
-		Document doc=null;
+	public static String convertToXhtml(String pathXML, ServletContext context, Integer userId, ArrayList<String> errorList){
+		String path ="catalog_export"+userId+".XHTML";
+		File file = new File(context.getRealPath(path));
 		try {
-			doc = createBasisDOM();
-		} catch (ParserConfigurationException e) {
-			errorList.add("Error in DOM Basis creation");
+		TransformerFactory factory = TransformerFactory.newInstance();
+		Transformer transformer;
+		transformer = factory.newTransformer(new StreamSource("/Users/tobias/Documents/workspace/Studium/EBUT_DEV/WholesalerWebDemo/files/transform.xslt"));
+		transformer.transform(new StreamSource(context.getRealPath(pathXML)), new StreamResult(file));
+		} catch (TransformerConfigurationException e) {
+			errorList.add("Error while Transforming File");
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			errorList.add("Error while Transforming File");
 			e.printStackTrace();
 		}
-		return doc;
+		return path;
 	}
+	
+	
+	
 	/**
 	 * Writes Document into File
 	 * @param doc The Document that should be transformed 
