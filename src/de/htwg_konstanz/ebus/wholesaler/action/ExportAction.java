@@ -33,7 +33,7 @@ public class ExportAction implements IAction{
 						
 						// Export.exportAll();
 						ServletContext context = request.getSession().getServletContext();
-						String path = Export.makeFile(Export.exportAll(errorList),context);
+						String path = Export.makeFile(Export.exportAll(errorList),context, loginBean.getUser().getId());
 						//Set Parameter in Session
 						request.getSession(true).setAttribute(Constants.PARAM_EXPORT, path);
 						 return "export.jsp";

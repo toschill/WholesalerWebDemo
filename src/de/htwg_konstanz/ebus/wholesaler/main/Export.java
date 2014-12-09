@@ -44,10 +44,9 @@ public class Export {
 		return doc;
 	}
 	
-	public static String makeFile(Document doc, ServletContext context){
+	public static String makeFile(Document doc, ServletContext context, Integer integer){
 		String path="catalog_export.XML";
 		File file=null;
-
 		try {
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			Transformer transformer = transformerFactory.newTransformer();
@@ -62,6 +61,7 @@ public class Export {
 			System.out.println("Error while transforming");
 			e.printStackTrace();
 		}
+		
 		return path;
 	}
 	
@@ -158,7 +158,6 @@ public class Export {
 		
 		/** Hier muss �ber den Datenbankzugriff die entsprechende Supplier_AID herausgelesen werden */
 		
-		
 		//Create ARTICLE_DETAILS-Element
 		Element article_details = document.createElement("ARTICLE_DETAILS");
 		//Append ARTICLE_DETAILS to "ARTICLE"
@@ -181,7 +180,7 @@ public class Export {
 		//Create EAN-Element
 		Element ean = document.createElement("EAN");
 		//Insert content for EAN
-		ean.insertBefore(document.createTextNode("000"), ean.getLastChild());
+		ean.insertBefore(document.createTextNode("DEFAULT"), ean.getLastChild());
 		//Append EAN to "ARTICLE_DETAILS"
 		article_details.appendChild(ean);
 		
@@ -193,7 +192,7 @@ public class Export {
 		//Create ORDER_UNIT-Element
 		Element order_unit = document.createElement("ORDER_UNIT");
 		//Insert content for ORDER_UNIT
-		order_unit.insertBefore(document.createTextNode("000"), order_unit.getLastChild());
+		order_unit.insertBefore(document.createTextNode("DEFAULT"), order_unit.getLastChild());
 		//Append ORDER_UNIT to "ARTICLE_ORDER_DETAILS"
 		article_order_details.appendChild(order_unit);
 		
@@ -210,7 +209,6 @@ public class Export {
 //Optional	order_unit.insertBefore(document.createTextNode("000"), order_unit.getLastChild());
 		//Append NO_CU_PER_OU to "ARTICLE_ORDER_DETAILS"
 		article_order_details.appendChild(no_cu_per_ou);
-		
 		return document;
 		
 	}
