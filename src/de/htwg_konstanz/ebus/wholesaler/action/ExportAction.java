@@ -30,12 +30,48 @@ public class ExportAction implements IAction{
 					// -> use the "Security.RESOURCE_ALL" constant which includes all resources.
 					if (Security.getInstance().isUserAllowed(loginBean.getUser(), Security.RESOURCE_ALL, Security.ACTION_READ))
 					{
-						
-						// Export.exportAll();
+						//get ServletContext for relative path
 						ServletContext context = request.getSession().getServletContext();
-						String path = Export.makeFile(Export.exportAll(errorList),context);
-						//Set Parameter in Session
-						request.getSession(true).setAttribute(Constants.PARAM_EXPORT, path);
+						//get the Parameters
+						String search = request.getParameter(Constants.ACTION_EXPORT_SEARCH);
+						String view = request.getParameter(Constants.ACTION_EXPORT_VIEW);
+						int userId=loginBean.getUser().getId();
+						
+						if(search == null||search==""){
+							//there was no search string entered
+							if("BMECAT".equals(view)){
+								//User wants BMECAT
+								String path = Export.makeFile(Export.exportAll(errorList),context, userId, errorList);
+								if(errorList.isEmpty()){
+									return path;
+								}
+							}
+							if(("XHTML").equals(view)){
+								//User wants XHTML
+								String path = Export.makeFile(Export.exportAll(errorList), context, userId, errorList);
+								path = Export.convertToXhtml(path, context, userId, errorList);
+								if(errorList.isEmpty()){
+									return path;
+								}
+							}
+						}
+						else{
+							//Search string was entered 
+							if("BMECAT".equals(view)){
+								String path = Export.makeFile(Export.exportSearch(errorList, search), context, userId, errorList);
+								if(errorList.isEmpty()){
+									return path;
+								}
+							}
+							if(("XHTML").equals(view)){
+								String path = Export.makeFile(Export.exportSearch(errorList, search), context, userId, errorList);
+								path = Export.convertToXhtml(path, context, userId, errorList);
+								if(errorList.isEmpty()){
+									return path;
+								}
+							}
+						}
+						//when there is an error in errorList or when no parameter is passed
 						 return "export.jsp";
 					}
 					else

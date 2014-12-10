@@ -14,6 +14,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -34,11 +35,29 @@ public class Export {
 		try {
 			 document = createCatalog();
 		} catch (ParserConfigurationException e) {
-			System.out.println("Error in DOM Basis creation");
+			errorList.add("Error in DOM Basis creation");
+			e.printStackTrace();
+		}
+		return document;
+	}
+	
+	/**
+	 * exports the Catalog with Articles that match search
+	 * @param errorList The ErrorList to inform user
+	 * @param search The Serch string
+	 * @return BMECAT conform document
+	 */
+	public static Document exportSearch(ArrayList<String> errorList, String search){
+		Document doc= null;
+		try {
+			 doc = createBasisDOM(doc);
+			 doc = getSelectedArticle(doc, search, errorList);
+		} catch (ParserConfigurationException e) {
+			errorList.add("Error in DOM Basis creation");
 			e.printStackTrace();
 		}
 		
-		return document;
+		return doc;
 	}
 	
 	/**
@@ -56,10 +75,37 @@ public class Export {
 		return document;
 	}
 	
-	public static String makeFile(Document doc, ServletContext context){
-		String path="catalog_export.XML";
+	public static String convertToXhtml(String pathXML, ServletContext context, Integer userId, ArrayList<String> errorList){
+		String path ="catalog_export"+userId+".XHTML";
+		File file = new File(context.getRealPath(path));
+		try {
+		TransformerFactory factory = TransformerFactory.newInstance();
+		Transformer transformer;
+		transformer = factory.newTransformer(new StreamSource("/Users/tobias/Documents/workspace/Studium/EBUT_DEV/WholesalerWebDemo/files/transform.xslt"));
+		transformer.transform(new StreamSource(context.getRealPath(pathXML)), new StreamResult(file));
+		} catch (TransformerConfigurationException e) {
+			errorList.add("Error while Transforming File");
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			errorList.add("Error while Transforming File");
+			e.printStackTrace();
+		}
+		return path;
+	}
+	
+	
+	
+	/**
+	 * Writes Document into File
+	 * @param doc The Document that should be transformed 
+	 * @param context The ServletContext to get the relative path
+	 * @param userId The userId is needed for the filename
+	 * @param errorList The errorList to inform User in case of error
+	 * @return the Path to the File
+	 */
+	public static String makeFile(Document doc, ServletContext context, Integer userId, ArrayList<String> errorList){
+		String path="catalog_export"+userId+".XML";
 		File file=null;
-
 		try {
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			Transformer transformer = transformerFactory.newTransformer();
@@ -68,12 +114,13 @@ public class Export {
 			StreamResult result = new StreamResult(file);
 			transformer.transform(source, result);
 		} catch (TransformerConfigurationException e) {
-			System.out.println("Configuration Error while transforming");
+			errorList.add("Configuration Error while transforming");
 			e.printStackTrace();
 		} catch (TransformerException e) {
-			System.out.println("Error while transforming");
+			errorList.add("Error while transforming");
 			e.printStackTrace();
 		}
+		
 		return path;
 	}
 	
@@ -170,9 +217,11 @@ public class Export {
 	}
 	
 	/**
-	 * Creates an ARTICLE Tag with its child's for every article in our Catalog. 
-	 * @param document Basis DOM Document
-	 * @param bop BOProduct 
+	 * Adds productinformation as Article to the Document -> BMECAT conform
+	 * DOCUMENT NEEDS A T_NEW_CATALOG Attribute
+	 * @param document The BMECAT Document where the Product should be added
+	 * @param bop The Product
+	 * @return
 	 */
 	public static void createArticleDOM(Document document, BOProduct bop){
 		
@@ -211,7 +260,7 @@ public class Export {
 		//Create EAN-Element
 		Element ean = document.createElement("EAN");
 		//Insert content for EAN
-		ean.insertBefore(document.createTextNode("000"), ean.getLastChild());
+		ean.insertBefore(document.createTextNode("DEFAULT"), ean.getLastChild());
 		//Append EAN to "ARTICLE_DETAILS"
 		article_details.appendChild(ean);
 		
@@ -223,7 +272,7 @@ public class Export {
 		//Create ORDER_UNIT-Element
 		Element order_unit = document.createElement("ORDER_UNIT");
 		//Insert content for ORDER_UNIT
-		order_unit.insertBefore(document.createTextNode("000"), order_unit.getLastChild());
+		order_unit.insertBefore(document.createTextNode("DEFAULT"), order_unit.getLastChild());
 		//Append ORDER_UNIT to "ARTICLE_ORDER_DETAILS"
 		article_order_details.appendChild(order_unit);
 		
@@ -249,6 +298,43 @@ public class Export {
 		createArticlePriceDOM(document, article_price_details, bop);
 	}
 	
+	
+
+	
+	/**
+	 * Iterates over all Artikles in the DB and calls the createArticleDOM Method
+	 * @param Document The BMECAT Document
+	 * @return The Document with articles added
+	 */
+	public static Document getAllArcticles(Document document){
+		List<BOProduct> productList = ProductBOA.getInstance().findAll();
+		for(BOProduct bop : productList){
+			createArticleDOM(document, bop);
+		}
+		return document;
+	}
+	
+	/**
+	 * Iterates over all Articles in the DB and calls the createArticleDOM Method 
+	 * for the one where the shortDescription contains the search query
+	 * @param Document The BMECAT Document
+	 * @return The Document with articles added
+	 */
+	public static Document getSelectedArticle(Document document, String search, ArrayList<String> errorList){
+		List<BOProduct> productList = ProductBOA.getInstance().findAll();
+		Boolean foundOne=false;
+		for(BOProduct bop : productList){
+			if(bop.getShortDescription().toLowerCase().contains(search.toLowerCase())){
+				foundOne=true;
+				createArticleDOM(document, bop);
+			}
+		}
+		if(!foundOne){
+			errorList.add("Es wurde kein Artikel gefunden, dessen Kurzbeschreibung " +search+ " enthält");
+		}
+		return document;
+	}
+	
 	/**
 	 * Appends an all Child's to "ARTICLE_PRICE_DETAILS" for every Article of the catalog
 	 * @param document DOM filled with all Articles
@@ -256,7 +342,6 @@ public class Export {
 	 * @param bop BOProduct that is needed to get the "salePrices"
 	 */
 	public static void createArticlePriceDOM(Document document, Element element, BOProduct bop){
-	
 		Element article_price_details = element;
 		List<BOSalesPrice> salePrices = bop.getSalesPrices();
 		
@@ -294,5 +379,7 @@ public class Export {
 		}
 
 	}
+
+	
 	
 }
