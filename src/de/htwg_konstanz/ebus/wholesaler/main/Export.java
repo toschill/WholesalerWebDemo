@@ -20,28 +20,40 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOProduct;
+import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOSalesPrice;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.boa.ProductBOA;
 
 public class Export {
-
-	private String xmlDocument;
 	
 	/**
 	 * exports the whole Catalog
-	 * @return 
+	 * @return Product catalog
 	 */
 	public static Document exportAll(ArrayList<String> errorList){
-		Document doc= null;
+		Document document= null;
 		try {
-			 doc = createBasisDOM();
-			 doc = getAllArcticles(doc);
+			 document = createCatalog();
 		} catch (ParserConfigurationException e) {
 			System.out.println("Error in DOM Basis creation");
 			e.printStackTrace();
 		}
 		
-		
-		return doc;
+		return document;
+	}
+	
+	/**
+	 * Creates the BMECat catalog
+	 * @return catalog
+	 * @throws ParserConfigurationException
+	 */
+	public static Document createCatalog() throws ParserConfigurationException{
+		List<BOProduct> productList = ProductBOA.getInstance().findAll();
+		Document document = createDocument();
+		document = createBasisDOM(document);
+		for(BOProduct bop : productList){
+			createArticleDOM(document, bop);
+		}
+		return document;
 	}
 	
 	public static String makeFile(Document doc, ServletContext context){
@@ -65,10 +77,26 @@ public class Export {
 		return path;
 	}
 	
-	public static Document createBasisDOM() throws ParserConfigurationException{
+	/**
+	 * Creates an empty document
+	 * @return empty document
+	 * @throws ParserConfigurationException
+	 */
+	public static Document createDocument() throws ParserConfigurationException{
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document document = db.newDocument();
+		
+		return document;
+	}
+	
+	/**
+	 * Creates the Basis of our DOM 
+	 * @param document empty document in which gets filled with the BasisDOM
+	 * @return document with BasisDOM
+	 * @throws ParserConfigurationException
+	 */
+	public static Document createBasisDOM(Document document) throws ParserConfigurationException{
 		
 		//Create ROOT-Element with attributes
 		Element root = document.createElement("BMECAT");
@@ -137,11 +165,16 @@ public class Export {
 		Element t_new_catalog = document.createElement("T_NEW_CATALOG");
 		//Append T_NEW_CATALOG to "HEADER"
 		root.appendChild(t_new_catalog);
-		
+	
 		return document;
 	}
 	
-	public static Document createArticleDOM(Document document, BOProduct bop){
+	/**
+	 * Creates an ARTICLE Tag with its child's for every article in our Catalog. 
+	 * @param document Basis DOM Document
+	 * @param bop BOProduct 
+	 */
+	public static void createArticleDOM(Document document, BOProduct bop){
 		
 		Node t_new_catalog = document.getElementsByTagName("T_NEW_CATALOG").item(0);
 		
@@ -155,9 +188,6 @@ public class Export {
 		supplier_aid.insertBefore(document.createTextNode(bop.getOrderNumberSupplier()), supplier_aid.getLastChild());
 		//Append SUPPLIER_AID to "ARTICLE"
 		article.appendChild(supplier_aid);
-		
-		/** Hier muss �ber den Datenbankzugriff die entsprechende Supplier_AID herausgelesen werden */
-		
 		
 		//Create ARTICLE_DETAILS-Element
 		Element article_details = document.createElement("ARTICLE_DETAILS");
@@ -211,59 +241,58 @@ public class Export {
 		//Append NO_CU_PER_OU to "ARTICLE_ORDER_DETAILS"
 		article_order_details.appendChild(no_cu_per_ou);
 		
-		return document;
-		
+		//Create ARTICLE_DETAILS-Element
+		Element article_price_details = document.createElement("ARTICLE_PRICE_DETAILS");
+		//Append ARTICLE_DETAILS to "ARTICLE"
+		article.appendChild(article_price_details);
+			
+		createArticlePriceDOM(document, article_price_details, bop);
 	}
 	
-	public static Document getAllArcticles(Document document){
-		List<BOProduct> productList = ProductBOA.getInstance().findAll();
-		for(BOProduct bop : productList){
-			document = createArticleDOM(document, bop);
+	/**
+	 * Appends an all Child's to "ARTICLE_PRICE_DETAILS" for every Article of the catalog
+	 * @param document DOM filled with all Articles
+	 * @param element "ARTICLE_PRICE_DETAILS" Element
+	 * @param bop BOProduct that is needed to get the "salePrices"
+	 */
+	public static void createArticlePriceDOM(Document document, Element element, BOProduct bop){
+	
+		Element article_price_details = element;
+		List<BOSalesPrice> salePrices = bop.getSalesPrices();
+		
+		for(BOSalesPrice salePrice : salePrices){
+			//Create ARICLE_PRICE-Element
+			Element article_price = document.createElement("ARTICLE_PRICE");
+			//Set Attribute for ARTICLE_PRICE
+			article_price.setAttribute("price_type", salePrice.getPricetype());
+			//Append ARTICLE_PRICE to "ARTICLE_PRICE_DETAILS"
+			article_price_details.appendChild(article_price);
+			
+			//Create PRICE_AMOUNT-Element
+			Element price_amount = document.createElement("PRICE_AMOUNT");
+			//Append PRICE_AMOUNT to "ARTICLE_PRICE"
+			article_price.appendChild(price_amount);
+			price_amount.insertBefore(document.createTextNode(salePrice.getAmount().toString()), price_amount.getLastChild());		
+			
+			//Create PRICE_CURRENCY-Element
+			Element price_currency = document.createElement("PRICE_CURRENCY");
+			//Append PRICE_CURRENCY to "ARTICLE_PRICE"
+			article_price.appendChild(price_currency);
+			price_currency.insertBefore(document.createTextNode(salePrice.getCountry().getCurrency().getCode()), price_currency.getLastChild());
+			
+			//Create TAX-Element
+			Element tax = document.createElement("TAX");
+			//Append TAX to "ARTICLE_PRICE"
+			article_price.appendChild(tax);
+			tax.insertBefore(document.createTextNode(salePrice.getTaxrate().toString()), tax.getLastChild());
+			
+			//Create TERRITORY
+			Element territory = document.createElement("TERRITORY");
+			//Append TERRITORY to "ARTICLE_PRICE"
+			article_price.appendChild(territory);
+			territory.insertBefore(document.createTextNode(salePrice.getCountry().getIsocode()), territory.getLastChild());
 		}
-		return document;
-	}
-	
-	public Document createArticlePriceDOM(Document document){
-		
-		//Get ARTICLE_PRICE_DETAILS-Element from document
-		Element article_price_details = (Element) document.getElementsByTagName("ARTICLE_PRICE_DETAILS");
-		
-		
-		//Create ARICLE_PRICE-Element
-		Element article_price = document.createElement("ARTICLE_PRICE");
-		//Set Attribut to ARTICLE_PRICE
-		article_price.setAttribute("price_type", "--- Insert Attribute Value here! ---");
-		//Append ARTICLE_PRICE to "ARTICLE_PRICE_DETAILS"
-		article_price_details.appendChild(article_price);
-		
-		//Create PRICE_AMOUNT-Element
-		Element price_amount = document.createElement("PRICE_AMOUNT");
-		//Append PRICE_AMOUNT to "ARTICLE_PRICE"
-		article_price.appendChild(price_amount);
-				
-		//Create PRICE_CURRENCY-Element
-		Element price_currency = document.createElement("PRICE_CURRENCY");
-		//Append PRICE_CURRENCY to "ARTICLE_PRICE"
-		article_price.appendChild(price_currency);
-		
-		//Create TAX-Element
-		Element tax = document.createElement("TAX");
-		//Append TAX to "ARTICLE_PRICE"
-		article_price.appendChild(tax);
-		
-		
-		return document;	
-	}
-	
-	public Document createTerritoryDOM(Document document){
-		
-		//Get ARTICLE_PRICE Element from document
-		Element article_price = (Element) document.getElementsByTagName("ARTICLE_PRICE");
-		
-		//Create TERRITORY
-		
-		
-		return document;		
+
 	}
 	
 }
