@@ -48,16 +48,14 @@ public class Export {
 	 * @return BMECAT conform document
 	 */
 	public static Document exportSearch(ArrayList<String> errorList, String search){
-		Document doc= null;
+		Document document= null;
 		try {
-			 doc = createBasisDOM(doc);
-			 doc = getSelectedArticle(doc, search, errorList);
+			 document = createSelectedCatalog(errorList, search);
 		} catch (ParserConfigurationException e) {
 			errorList.add("Error in DOM Basis creation");
 			e.printStackTrace();
 		}
-		
-		return doc;
+		return document;
 	}
 	
 	/**
@@ -71,6 +69,28 @@ public class Export {
 		document = createBasisDOM(document);
 		for(BOProduct bop : productList){
 			createArticleDOM(document, bop);
+		}
+		return document;
+	}
+
+	/**
+	 * Creates the BMECat catalog
+	 * @return catalog
+	 * @throws ParserConfigurationException
+	 */
+	public static Document createSelectedCatalog(ArrayList<String> errorList, String search) throws ParserConfigurationException{
+		List<BOProduct> productList = ProductBOA.getInstance().findAll();
+		Boolean foundOne=false;
+		Document document = createDocument();
+		document = createBasisDOM(document);
+		for(BOProduct bop : productList){
+			if(bop.getShortDescription().toLowerCase().contains(search.toLowerCase())){
+				foundOne=true;
+				createArticleDOM(document, bop);
+			}
+		}
+		if(!foundOne){
+			errorList.add("Es wurde kein Artikel gefunden, dessen Kurzbeschreibung " +search+ " enthält");
 		}
 		return document;
 	}
@@ -298,42 +318,7 @@ public class Export {
 		createArticlePriceDOM(document, article_price_details, bop);
 	}
 	
-	
 
-	
-	/**
-	 * Iterates over all Artikles in the DB and calls the createArticleDOM Method
-	 * @param Document The BMECAT Document
-	 * @return The Document with articles added
-	 */
-	public static Document getAllArcticles(Document document){
-		List<BOProduct> productList = ProductBOA.getInstance().findAll();
-		for(BOProduct bop : productList){
-			createArticleDOM(document, bop);
-		}
-		return document;
-	}
-	
-	/**
-	 * Iterates over all Articles in the DB and calls the createArticleDOM Method 
-	 * for the one where the shortDescription contains the search query
-	 * @param Document The BMECAT Document
-	 * @return The Document with articles added
-	 */
-	public static Document getSelectedArticle(Document document, String search, ArrayList<String> errorList){
-		List<BOProduct> productList = ProductBOA.getInstance().findAll();
-		Boolean foundOne=false;
-		for(BOProduct bop : productList){
-			if(bop.getShortDescription().toLowerCase().contains(search.toLowerCase())){
-				foundOne=true;
-				createArticleDOM(document, bop);
-			}
-		}
-		if(!foundOne){
-			errorList.add("Es wurde kein Artikel gefunden, dessen Kurzbeschreibung " +search+ " enthält");
-		}
-		return document;
-	}
 	
 	/**
 	 * Appends an all Child's to "ARTICLE_PRICE_DETAILS" for every Article of the catalog
