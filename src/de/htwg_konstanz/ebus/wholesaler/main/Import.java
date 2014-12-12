@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.XMLConstants;
@@ -23,6 +21,8 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOCountry;
@@ -34,13 +34,9 @@ import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOSupplier;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.boa.PriceBOA;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.boa.ProductBOA;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.boa.SupplierBOA;
+import de.htwg_konstanz.ebus.framework.wholesaler.api.boa._BaseBOA;
 import de.htwg_konstanz.ebus.framework.wholesaler.vo.Country;
 import de.htwg_konstanz.ebus.framework.wholesaler.vo.Currency;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 public class Import {
 
@@ -52,8 +48,7 @@ public class Import {
 			BOSupplier supplier = getSupplier(catalog, errorList);
 			if(supplier != null){
 				System.out.println("LOAD SUPPLIER != NULL");
-				insertProductsIntoDB(catalog, errorList);
-				insertProductPricesIntoDB(catalog, errorList);
+				BOProduct product = insertProductsIntoDB(catalog, errorList, supplier);
 			} else {
 				errorList.add("Supplier not found");
 			}
@@ -94,7 +89,7 @@ public class Import {
 		Schema bmeCat = null;
 		boolean valid = false;
 		try {
-			bmeCat = schemaFactory.newSchema(new File("C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd"));
+			bmeCat = schemaFactory.newSchema(new File("/Users/tobias/Documents/workspace/Studium/EBUT_DEV/WholesalerWebDemo/files/bmecat_new_catalog_1_2_simple_V0.96.xsd"));
 			validator = bmeCat.newValidator();
 			//Validate Uploaded XML File
 			
@@ -154,14 +149,14 @@ public class Import {
 		return null;
 	}
 	
-	public void insertProductsIntoDB(Document catalog, List<String> errorList){
+	public BOProduct insertProductsIntoDB(Document catalog, List<String> errorList, BOSupplier supplier){
 		System.out.println("ERREICHT INSERT PRODUCT INTO DB");
 		//Get all Articles of the uploaded catalog
 		NodeList articleList = catalog.getElementsByTagName("ARTICLE");
-		
+		BOProduct product =null;
 		//Iterate over every "ARTICLE" in catalog 
 		for(int i = 0; i < articleList.getLength(); i++){
-			BOProduct product = new BOProduct();
+			product=new BOProduct();
 			Element article = (Element) articleList.item(i);
 			//Search for "DESCRIPTION_SHORT" and set the value for a new Product
 			NodeList description_short = article.getElementsByTagName("DESCRIPTION_SHORT"); 
@@ -173,23 +168,34 @@ public class Import {
 			product.setLongDescription(description_long.item(0).getChildNodes().item(0).getNodeValue());
 			System.out.println("----------------- " + product.getLongDescription());
 			
+			
+			
 			//Search for "SUPPLIER_AID" and set the value for a new Product
 			NodeList supplier_aid = article.getElementsByTagName("SUPPLIER_AID");
 			product.setOrderNumberSupplier(supplier_aid.item(0).getChildNodes().item(0).getNodeValue());
 			System.out.println("----------------- " + product.getOrderNumberSupplier());
 			
+			product.setOrderNumberCustomer(supplier_aid.item(0).getChildNodes().item(0).getNodeValue());
+			product.setSupplier(supplier);
 			//If Product is already in DB an error gets thrown, else we save the product inside our DB
 			List<BOProduct> productDB = ProductBOA.getInstance().findByShortdescription(product.getShortDescription());
-			if(productDB != null){
+			System.out.println(productDB);
+			if(!productDB.isEmpty()){
 				errorList.add("Product already in DB");
 			} else {
+				System.out.println("Product saved "+ product.getShortDescription());
 				ProductBOA.getInstance().saveOrUpdate(product);
-				
+				insertProductPricesIntoDB(catalog, errorList, product);
 			}
-		}			
+			System.out.println("Product not saved "+ product.getShortDescription());
+		}	
+		_BaseBOA.getInstance().commit();
+		return product;
+	
+		
 	}
 	
-	public void insertProductPricesIntoDB(Document catalog, List<String> errorList){
+	public void insertProductPricesIntoDB(Document catalog, List<String> errorList, BOProduct product){
 		
 		BOSalesPrice salesPrice = new BOSalesPrice();
 		BOPurchasePrice purchasePrice = new BOPurchasePrice();
@@ -224,12 +230,19 @@ public class Import {
 			
 			//Set "TAX"
 			NodeList tax = articlePrice.getElementsByTagName("TAX");
-			purchasePrice.setTaxrate(BigDecimal.valueOf(Double.valueOf(tax.item(0).getChildNodes().item(0).getNodeValue())));
+			BigDecimal bDecimal = BigDecimal.valueOf(Double.valueOf(tax.item(0).getChildNodes().item(0).getNodeValue()));
+			purchasePrice.setTaxrate(bDecimal);
 			salesPrice.setTaxrate(BigDecimal.valueOf(Double.valueOf(tax.item(0).getChildNodes().item(0).getNodeValue())));
 			
+			purchasePrice.setLowerboundScaledprice(1);
+			salesPrice.setLowerboundScaledprice(1);
+			purchasePrice.setProduct(product);
+			salesPrice.setProduct(product);
+
 			//Save Prices in DB
 			PriceBOA.getInstance().saveOrUpdatePurchasePrice(purchasePrice);
 			PriceBOA.getInstance().saveOrUpdateSalesPrice(salesPrice);
+			_BaseBOA.getInstance().commit();
 		}
 	}
 }
