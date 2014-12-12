@@ -34,6 +34,7 @@ import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOSupplier;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.boa.PriceBOA;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.boa.ProductBOA;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.boa.SupplierBOA;
+import de.htwg_konstanz.ebus.framework.wholesaler.api.boa._BaseBOA;
 import de.htwg_konstanz.ebus.framework.wholesaler.vo.Country;
 import de.htwg_konstanz.ebus.framework.wholesaler.vo.Currency;
 
@@ -52,8 +53,7 @@ public class Import {
 			BOSupplier supplier = getSupplier(catalog, errorList);
 			if(supplier != null){
 				System.out.println("LOAD SUPPLIER != NULL");
-				insertProductsIntoDB(catalog, errorList);
-				insertProductPricesIntoDB(catalog, errorList);
+				insertProductsIntoDB(supplier, catalog, errorList);
 			} else {
 				errorList.add("Supplier not found");
 			}
@@ -154,7 +154,7 @@ public class Import {
 		return null;
 	}
 	
-	public void insertProductsIntoDB(Document catalog, List<String> errorList){
+	public void insertProductsIntoDB(BOSupplier supplier, Document catalog, List<String> errorList){
 		System.out.println("ERREICHT INSERT PRODUCT INTO DB");
 		//Get all Articles of the uploaded catalog
 		NodeList articleList = catalog.getElementsByTagName("ARTICLE");
@@ -166,38 +166,44 @@ public class Import {
 			//Search for "DESCRIPTION_SHORT" and set the value for a new Product
 			NodeList description_short = article.getElementsByTagName("DESCRIPTION_SHORT"); 
 			product.setShortDescription(description_short.item(0).getChildNodes().item(0).getNodeValue());
-			System.out.println("PRODUKT GEFUNDEN: " + product.getShortDescription());
+			System.out.println("PRODUKT GEFUNDEN  SD: " + product.getShortDescription());
 			
 			//Search for "DESCRIPTION_LONG" and set the value for a new Product
 			NodeList description_long = article.getElementsByTagName("DESCRIPTION_LONG");
 			product.setLongDescription(description_long.item(0).getChildNodes().item(0).getNodeValue());
-			System.out.println("----------------- " + product.getLongDescription());
+			System.out.println("----------------- LD " + product.getLongDescription());
 			
 			//Search for "SUPPLIER_AID" and set the value for a new Product
 			NodeList supplier_aid = article.getElementsByTagName("SUPPLIER_AID");
 			product.setOrderNumberSupplier(supplier_aid.item(0).getChildNodes().item(0).getNodeValue());
-			System.out.println("----------------- " + product.getOrderNumberSupplier());
+			System.out.println("----------------- SA " + product.getOrderNumberSupplier());
+			
+			product.setOrderNumberCustomer(supplier_aid.item(0).getChildNodes().item(0).getNodeValue());
+			product.setSupplier(supplier);
 			
 			//If Product is already in DB an error gets thrown, else we save the product inside our DB
 			List<BOProduct> productDB = ProductBOA.getInstance().findByShortdescription(product.getShortDescription());
-			if(productDB != null){
-				errorList.add("Product already in DB");
-			} else {
+			
+			//if(!productDB.isEmpty()){
+				System.out.println("UPDATE PRODUCT");
 				ProductBOA.getInstance().saveOrUpdate(product);
-				
-			}
+				_BaseBOA.getInstance().commit();
+				NodeList articlePriceList = article.getElementsByTagName("ARTICLE_PRICE");
+				insertProductPricesIntoDB(product, articlePriceList, errorList);
+			/*} else {
+				errorList.add("Product: " + product.getShortDescription() + " already in DB");
+			}*/
 		}			
 	}
 	
-	public void insertProductPricesIntoDB(Document catalog, List<String> errorList){
+	public void insertProductPricesIntoDB(BOProduct product, NodeList articlePriceList, List<String> errorList){
+		System.out.println("ERREICHT INSERT PRICES INTO DB");
 		
 		BOSalesPrice salesPrice = new BOSalesPrice();
 		BOPurchasePrice purchasePrice = new BOPurchasePrice();
 	
 		//SalePrice = 1.5 x purchasePrice
 		BigDecimal profit = new BigDecimal(1.5);
-		
-		NodeList articlePriceList = catalog.getElementsByTagName("ARTICLE_PRICE");
 		
 		//Iterate over any "ARTICLE_DETAIL" in catalog
 		for(int i = 0; i < articlePriceList.getLength(); i++){
@@ -211,25 +217,44 @@ public class Import {
 			NodeList article_price_amount = articlePrice.getElementsByTagName("PRICE_AMOUNT");
 			purchasePrice.setAmount(BigDecimal.valueOf(Double.valueOf(article_price_amount.item(0).getChildNodes().item(0).getNodeValue())));
 			salesPrice.setAmount(BigDecimal.valueOf(Double.valueOf(article_price_amount.item(0).getChildNodes().item(0).getNodeValue())).multiply(profit));
+			System.out.println("----------------- " + purchasePrice.getAmount());
+			System.out.println("----------------- " + salesPrice.getAmount());
 		
 			//Set "TERRITORY"
 			NodeList territory = articlePrice.getElementsByTagName("TERRITORY");
 			purchasePrice.setCountry(new BOCountry(new Country(territory.item(0).getChildNodes().item(0).getNodeValue())));
 			salesPrice.setCountry(new BOCountry(new Country(territory.item(0).getChildNodes().item(0).getNodeValue())));
+			System.out.println("----------------- " + purchasePrice.getCountry());
+			System.out.println("----------------- " + salesPrice.getCountry());
 			
 			//Set "PRICE_CURRENCY"
 			NodeList price_currency = articlePrice.getElementsByTagName("PRICE_CURRENCY");
 			purchasePrice.getCountry().setCurrency(new BOCurrency(new Currency(price_currency.item(0).getChildNodes().item(0).getNodeValue())));
 			salesPrice.getCountry().setCurrency(new BOCurrency(new Currency(price_currency.item(0).getChildNodes().item(0).getNodeValue())));
+			System.out.println("----------------- " + purchasePrice.getCountry().getCurrency());
+			System.out.println("----------------- " + salesPrice.getCountry().getCurrency());
 			
 			//Set "TAX"
 			NodeList tax = articlePrice.getElementsByTagName("TAX");
 			purchasePrice.setTaxrate(BigDecimal.valueOf(Double.valueOf(tax.item(0).getChildNodes().item(0).getNodeValue())));
 			salesPrice.setTaxrate(BigDecimal.valueOf(Double.valueOf(tax.item(0).getChildNodes().item(0).getNodeValue())));
+			System.out.println("----------------- " + purchasePrice.getTaxrate());
+			System.out.println("----------------- " + salesPrice.getTaxrate());
+			
+			//Set "LOWERBOUNDSCALEDPRICE"
+			purchasePrice.setLowerboundScaledprice(1);
+			salesPrice.setLowerboundScaledprice(1);
+			System.out.println("----------------- " + purchasePrice.getLowerboundScaledprice());
+			System.out.println("----------------- " + salesPrice.getLowerboundScaledprice());
 			
 			//Save Prices in DB
-			PriceBOA.getInstance().saveOrUpdatePurchasePrice(purchasePrice);
-			PriceBOA.getInstance().saveOrUpdateSalesPrice(salesPrice);
+			purchasePrice.setProduct(product);
+			salesPrice.setProduct(product);
+			
+			PriceBOA.getInstance().saveOrUpdate(purchasePrice);
+			PriceBOA.getInstance().saveOrUpdate(salesPrice);
+			
+			_BaseBOA.getInstance().commit();
 		}
 	}
 }
