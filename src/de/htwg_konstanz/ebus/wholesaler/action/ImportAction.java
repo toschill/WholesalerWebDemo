@@ -35,15 +35,11 @@ public class ImportAction implements IAction{
 			{
 				//get ServletContext for relative path
 				ServletContext context = request.getSession().getServletContext();
-				String xmlFile = request.getParameter(Constants.ACTION_IMPORT_XMLFILE);
 				String path = "welcome.jsp";
-				System.out.println("XMLFILE: " + xmlFile);
 				Import upload = new Import();
 				//Catch File upload
-			
 				upload.load(request, errorList);
-				
-				errorList.add("No XML File found!");
+			
 				return "import.jsp";
 			}
 			else

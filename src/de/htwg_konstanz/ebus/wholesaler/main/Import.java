@@ -44,6 +44,25 @@ import org.w3c.dom.NodeList;
 
 public class Import {
 
+	public void load(HttpServletRequest request, List<String> errorList){
+		InputStream importXml = catchFileUpload(request, errorList);
+		Document catalog = createImportFileDOM(importXml, errorList);
+		if(catalog != null){
+			validateXml(catalog, errorList);
+			BOSupplier supplier = getSupplier(catalog, errorList);
+			if(supplier != null){
+				System.out.println("LOAD SUPPLIER != NULL");
+				insertProductsIntoDB(catalog, errorList);
+				insertProductPricesIntoDB(catalog, errorList);
+			} else {
+				errorList.add("Supplier not found");
+			}
+			
+		} else {
+			errorList.add("Error in createImportFileDOM");
+		}
+	}
+	
 	/**
 	 * Creates FileItemFactory and FileUpload to catch the upload request
 	 * @param request 
@@ -69,39 +88,29 @@ public class Import {
 		return file;
 	}
 	
-	public void load(HttpServletRequest request, List<String> errorList){
-		InputStream importXml = catchFileUpload(request, errorList);
-		Document catalog = createImportFileDOM(importXml, errorList);
-		if(catalog != null){
-			validateXml(catalog, errorList);
-			BOSupplier supplier = getSupplier(catalog, errorList);
-			if(supplier != null){
-				insertProductsIntoDB(catalog, errorList);
-				insertProductPricesIntoDB(catalog, errorList);
-			}
-			
-		} else {
-			errorList.add("Error in createImportFileDOM");
-		}
-	}
-	
 	public boolean validateXml(Document document, List<String> errorList){
-		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI);
+		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		Validator validator = null;
 		Schema bmeCat = null;
 		boolean valid = false;
 		try {
-			bmeCat = schemaFactory.newSchema(new File("C:/Users/dominic.DIE-SICKELS/Documents/Studium/5.Semester/EBUT/Labor/Material_Aufgabe_2_Lab_EBUT_WS1415/Material_Aufgabe_2_Lab_EBUT_WS1415/Vereinfachtes_BMEcat1.2_Format/bmecat_new_catalog_1_2_simple_V0.96.xsd"));
+			bmeCat = schemaFactory.newSchema(new File("C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd"));
 			validator = bmeCat.newValidator();
-			
 			//Validate Uploaded XML File
+			
+		} catch (SAXException e) {
+			errorList.add("SCHEMA PROBLEM");
+			e.printStackTrace();
+		} 
+		try{
 			validator.validate(new DOMSource(document));
 			valid = true;
-		} catch (SAXException e) {
-			errorList.add("Document not valid");
-			e.printStackTrace();
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			errorList.add("Error during validation");
+			e.printStackTrace();
+		} catch (SAXException e) {
+			errorList.add("Error Document not valid");
 			e.printStackTrace();
 		}
 		
@@ -132,19 +141,21 @@ public class Import {
 	}
 		
 	public BOSupplier getSupplier(Document catalog, List<String> errorList){
-		
+		System.out.println("ERREICHT GET_SUPPLIER");
 		//Supplier in uploaded catalog
-		NodeList suppliers = catalog.getElementsByTagName("SUPPLIE_NAME");
+		NodeList suppliers = catalog.getElementsByTagName("SUPPLIER_NAME");
+		
 		//Save Supplier into a List
-		List<BOSupplier> supplierList = SupplierBOA.getInstance().findByCompanyName((suppliers.item(0).getNodeValue()));
+		List<BOSupplier> supplierList = SupplierBOA.getInstance().findByCompanyName((suppliers.item(0).getChildNodes().item(0).getNodeValue()));
 		if(!supplierList.isEmpty()){
+			System.out.println("ERREICHT IF ABFRAGE IN GET_SUPPLIER");
 			return supplierList.get(0);
 		}
 		return null;
 	}
 	
 	public void insertProductsIntoDB(Document catalog, List<String> errorList){
-		
+		System.out.println("ERREICHT INSERT PRODUCT INTO DB");
 		//Get all Articles of the uploaded catalog
 		NodeList articleList = catalog.getElementsByTagName("ARTICLE");
 		
@@ -154,17 +165,17 @@ public class Import {
 			Element article = (Element) articleList.item(i);
 			//Search for "DESCRIPTION_SHORT" and set the value for a new Product
 			NodeList description_short = article.getElementsByTagName("DESCRIPTION_SHORT"); 
-			product.setShortDescription(description_short.item(0).getNodeValue());
+			product.setShortDescription(description_short.item(0).getChildNodes().item(0).getNodeValue());
 			System.out.println("PRODUKT GEFUNDEN: " + product.getShortDescription());
 			
 			//Search for "DESCRIPTION_LONG" and set the value for a new Product
 			NodeList description_long = article.getElementsByTagName("DESCRIPTION_LONG");
-			product.setLongDescription(description_long.item(0).getNodeValue());
+			product.setLongDescription(description_long.item(0).getChildNodes().item(0).getNodeValue());
 			System.out.println("----------------- " + product.getLongDescription());
 			
 			//Search for "SUPPLIER_AID" and set the value for a new Product
 			NodeList supplier_aid = article.getElementsByTagName("SUPPLIER_AID");
-			product.setOrderNumberSupplier(supplier_aid.item(0).getNodeValue());
+			product.setOrderNumberSupplier(supplier_aid.item(0).getChildNodes().item(0).getNodeValue());
 			System.out.println("----------------- " + product.getOrderNumberSupplier());
 			
 			//If Product is already in DB an error gets thrown, else we save the product inside our DB
@@ -198,23 +209,23 @@ public class Import {
 		
 			//Set "PRICE_AMOUNT"
 			NodeList article_price_amount = articlePrice.getElementsByTagName("PRICE_AMOUNT");
-			purchasePrice.setAmount(BigDecimal.valueOf(Double.valueOf(article_price_amount.item(0).getNodeValue())));
-			salesPrice.setAmount(BigDecimal.valueOf(Double.valueOf(article_price_amount.item(0).getNodeValue())).multiply(profit));
+			purchasePrice.setAmount(BigDecimal.valueOf(Double.valueOf(article_price_amount.item(0).getChildNodes().item(0).getNodeValue())));
+			salesPrice.setAmount(BigDecimal.valueOf(Double.valueOf(article_price_amount.item(0).getChildNodes().item(0).getNodeValue())).multiply(profit));
 		
 			//Set "TERRITORY"
 			NodeList territory = articlePrice.getElementsByTagName("TERRITORY");
-			purchasePrice.setCountry(new BOCountry(new Country(territory.item(0).getNodeValue())));
-			salesPrice.setCountry(new BOCountry(new Country(territory.item(0).getNodeValue())));
+			purchasePrice.setCountry(new BOCountry(new Country(territory.item(0).getChildNodes().item(0).getNodeValue())));
+			salesPrice.setCountry(new BOCountry(new Country(territory.item(0).getChildNodes().item(0).getNodeValue())));
 			
 			//Set "PRICE_CURRENCY"
 			NodeList price_currency = articlePrice.getElementsByTagName("PRICE_CURRENCY");
-			purchasePrice.getCountry().setCurrency(new BOCurrency(new Currency(price_currency.item(0).getNodeValue())));
-			salesPrice.getCountry().setCurrency(new BOCurrency(new Currency(price_currency.item(0).getNodeValue())));
+			purchasePrice.getCountry().setCurrency(new BOCurrency(new Currency(price_currency.item(0).getChildNodes().item(0).getNodeValue())));
+			salesPrice.getCountry().setCurrency(new BOCurrency(new Currency(price_currency.item(0).getChildNodes().item(0).getNodeValue())));
 			
 			//Set "TAX"
 			NodeList tax = articlePrice.getElementsByTagName("TAX");
-			purchasePrice.setTaxrate(BigDecimal.valueOf(Double.valueOf(tax.item(0).getNodeValue())));
-			salesPrice.setTaxrate(BigDecimal.valueOf(Double.valueOf(tax.item(0).getNodeValue())));
+			purchasePrice.setTaxrate(BigDecimal.valueOf(Double.valueOf(tax.item(0).getChildNodes().item(0).getNodeValue())));
+			salesPrice.setTaxrate(BigDecimal.valueOf(Double.valueOf(tax.item(0).getChildNodes().item(0).getNodeValue())));
 			
 			//Save Prices in DB
 			PriceBOA.getInstance().saveOrUpdatePurchasePrice(purchasePrice);
