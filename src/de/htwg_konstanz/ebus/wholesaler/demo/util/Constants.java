@@ -28,6 +28,7 @@ public class Constants
 	
 	//Constants for Import and Export
 	public static final String ACTION_IMPORT = "import";
+	public static final String ACTION_IMPORT_XMLFILE = "xmlFile";
 	
 	public static final String ACTION_EXPORT = "export";
 	public static final String PARAM_EXPORT = "exportParam";
