@@ -34,6 +34,8 @@ public class Constants
 	public static final String PARAM_EXPORT = "exportParam";
 	public static final String ACTION_EXPORT_VIEW = "view";
 	public static final String ACTION_EXPORT_SEARCH = "search";
+	public static final String ACTION_EXPORT_DOWNLOAD = "download";
+
 
 	
     public static final String PARAM_SUPPLIER = "supplier";

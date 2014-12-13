@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-	<xsl:output method="html" version="5" indent="yes"/>
+	<xsl:output method="xml" doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" doctype-public="-//W3C//DTD XHTML 1.0 Transitional//EN" indent="yes"/>
 		<xsl:template match="/">
-			<html>
+			<html xmlns="http://www.w3.org/1999/xhtml">
 				 <head>
 				   <title><xsl:value-of select="BMECAT/HEADER/CATALOG/CATALOG_NAME"/></title>
 				 </head>
@@ -13,7 +13,7 @@
 	</xsl:template>
 		
 	<xsl:template match="HEADER">
-		<table>
+		<table border="1">
 		<xsl:for-each select="CATALOG/*">
 				<tr>
 					<td><xsl:value-of select ="local-name()"/></td>
@@ -30,8 +30,8 @@
 	</xsl:template>	
 	
 	<xsl:template match="//ARTICLE_DETAILS">
-		<p><h3><xsl:value-of select="local-name()"/><xsl:text>: </xsl:text></h3></p>
-		<table>
+		<h3><xsl:value-of select="local-name()"/><xsl:text>: </xsl:text></h3>
+		<table border="1">
 		<xsl:for-each select="*">
 			<tr>
 				<td><xsl:value-of select ="local-name()"/></td>
@@ -42,8 +42,8 @@
 	</xsl:template>
 
 	<xsl:template match="//ARTICLE_ORDER_DETAILS">
-		<p><h3><xsl:value-of select="local-name()"/><xsl:text>: </xsl:text></h3></p>
-		<table>
+		<h3><xsl:value-of select="local-name()"/><xsl:text>: </xsl:text></h3>
+		<table border="1">
 		<xsl:for-each select="*">
 			<tr>
 				<td><xsl:value-of select ="local-name()"/></td>
@@ -54,13 +54,13 @@
 	</xsl:template>
 	
 	<xsl:template match="//ARTICLE_PRICE_DETAILS">
-		<p><h3><xsl:value-of select="local-name()"/><xsl:text>: </xsl:text></h3></p>
+		<h3><xsl:value-of select="local-name()"/><xsl:text>: </xsl:text></h3>
 		<xsl:apply-templates/>
 	</xsl:template>
 	
 	<xsl:template match="//ARTICLE_PRICE">
-		<p><h3><xsl:value-of select="local-name()"/><xsl:text>: </xsl:text></h3></p>
-		<table>
+		<h3><xsl:value-of select="local-name()"/><xsl:text>: </xsl:text></h3>
+		<table border="1">
 		<xsl:for-each select="*">
 			<tr>
 				<td><xsl:value-of select ="local-name()"/></td>
@@ -71,7 +71,7 @@
 	</xsl:template>	
 	
 	<xsl:template match="//ARTICLE_REFERENCE/ART_ID_TO">
-		<p><h4>ARTIKEL HAT EINE REFERENZ AUF: <xsl:value-of select="node()"/><xsl:text>: </xsl:text></h4></p>
+		<h4>ARTIKEL HAT EINE REFERENZ AUF: <xsl:value-of select="node()"/><xsl:text>: </xsl:text></h4>
 	</xsl:template>	
 	
 </xsl:stylesheet>

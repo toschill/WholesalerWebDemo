@@ -102,7 +102,7 @@ public class Import {
 		Validator validator = null;
 		Schema bmeCat = null;
 		try {
-			bmeCat = schemaFactory.newSchema(new File("C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd"));//C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd
+			bmeCat = schemaFactory.newSchema(new File("/Users/tobias/Documents/workspace/Studium/EBUT_DEV/WholesalerWebDemo/files/bmecat_new_catalog_1_2_simple_without_NS.xsd"));//C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd
 			validator = bmeCat.newValidator();
 			//Validate Uploaded XML File
 			validator.validate(new DOMSource(document));

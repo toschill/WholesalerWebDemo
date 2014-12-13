@@ -1,10 +1,12 @@
 package de.htwg_konstanz.ebus.wholesaler.main;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletOutputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -95,6 +97,14 @@ public class Export {
 		return document;
 	}
 	
+	/**
+	 * Converts XML to W3C valid XHTML using the 
+	 * @param pathXML
+	 * @param context
+	 * @param userId
+	 * @param errorList
+	 * @return
+	 */
 	public static String convertToXhtml(String pathXML, ServletContext context, Integer userId, ArrayList<String> errorList){
 		String path ="catalog_export"+userId+".XHTML";
 		File file = new File(context.getRealPath(path));
@@ -365,6 +375,5 @@ public class Export {
 
 	}
 
-	
 	
 }

@@ -1,9 +1,12 @@
 package de.htwg_konstanz.ebus.wholesaler.action;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -35,6 +38,8 @@ public class ExportAction implements IAction{
 						//get the Parameters
 						String search = request.getParameter(Constants.ACTION_EXPORT_SEARCH);
 						String view = request.getParameter(Constants.ACTION_EXPORT_VIEW);
+						String download = request.getParameter(Constants.ACTION_EXPORT_DOWNLOAD);
+
 						int userId=loginBean.getUser().getId();
 						
 						if(search == null||search==""){
@@ -43,6 +48,10 @@ public class ExportAction implements IAction{
 								//User wants BMECAT
 								String path = Export.makeFile(Export.exportAll(errorList),context, userId, errorList);
 								if(errorList.isEmpty()){
+									if(("yes").equals(download)){
+										downloadFile(context, path, response, errorList);
+										return "export.jsp";
+									}
 									return path;
 								}
 							}
@@ -60,6 +69,10 @@ public class ExportAction implements IAction{
 							if("BMECAT".equals(view)){
 								String path = Export.makeFile(Export.exportSearch(errorList, search), context, userId, errorList);
 								if(errorList.isEmpty()){
+									if(("yes").equals(download)){
+										downloadFile(context, path, response, errorList);
+										return "export.jsp";
+									}
 									return path;
 								}
 							}
@@ -85,7 +98,34 @@ public class ExportAction implements IAction{
 				}
 				else
 					// redirect to the login page
-					return "login.jsp";				
+					return "login.jsp";	
+				
+		
+	}
+	
+	public void downloadFile(ServletContext context, String path, HttpServletResponse response, ArrayList<String> errorList){
+		try {
+			response.setContentType("text/xml");
+			response.setHeader("Content-Disposition",
+			"attachment;filename=bmecat.xml");
+			
+			File file = new File(context.getRealPath(path));
+			FileInputStream fileIn = new FileInputStream(file);
+			ServletOutputStream out = response.getOutputStream();
+			int bytesRead;
+
+			byte[] bytes = new byte[4096];
+			// copy binary contect to output stream
+			while ((bytesRead = fileIn.read(bytes)) != -1) {
+			    out.write(bytes, 0, bytesRead);
+			}
+			fileIn.close();
+			out.flush();
+			out.close();
+		} catch (IOException e) {
+			errorList.add("Error writing File");
+			e.printStackTrace();
+		}
 		
 	}
 
