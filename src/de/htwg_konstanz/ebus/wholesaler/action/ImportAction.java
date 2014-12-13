@@ -39,7 +39,6 @@ public class ImportAction implements IAction{
 				Import upload = new Import();
 				//Catch File upload
 				upload.load(request, errorList);
-			
 				return "import.jsp";
 			}
 			else

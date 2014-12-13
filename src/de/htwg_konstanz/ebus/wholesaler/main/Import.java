@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.List;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -20,6 +21,7 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FilenameUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -48,14 +50,16 @@ public class Import {
 			BOSupplier supplier = getSupplier(catalog, errorList);
 			if(supplier != null){
 				System.out.println("LOAD SUPPLIER != NULL");
-				BOProduct product = insertProductsIntoDB(catalog, errorList, supplier);
+				insertProductsIntoDB(catalog, errorList, supplier);
 			} else {
-				errorList.add("Supplier not found");
+				//errorList.add("Supplier not found");
+				System.out.println("No supplier found");
 			}
-			
-		} else {
-			errorList.add("Error in createImportFileDOM");
-		}
+		} 
+		//Keep only the first error in errorList for user information output
+		/*for(int i = 1; i < errorList.size(); i++){
+			errorList.remove(i);
+		}*/
 	}
 	
 	/**
@@ -72,44 +76,43 @@ public class Import {
 		try {
 			List<FileItem> items = upload.parseRequest(request);
 			file = items.get(0).getInputStream();
-			
+			for(FileItem item : items){
+				if(!item.isFormField()){
+					String filename = FilenameUtils.getName(item.getName());
+					String fileExtension = FilenameUtils.getExtension(item.getName());
+					System.out.println("FilenameExt. : " + filename);
+					if(!filename.endsWith(".xml")){
+						errorList.add("Uploaded File is from Type '." + fileExtension + "' but only XML Files are accepted"
+								+ " please select a XML File to upload!" );
+					}
+				}
+			}
 		} catch (FileUploadException e) {
 			errorList.add("Error with file upload!");
 			e.printStackTrace();
 		} catch (IOException e) {
-			errorList.add("IOException!");
+			errorList.add("Could not read input!");
 			e.printStackTrace();
 		}
 		return file;
 	}
 	
-	public boolean validateXml(Document document, List<String> errorList){
+	public void validateXml(Document document, List<String> errorList){
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		Validator validator = null;
 		Schema bmeCat = null;
-		boolean valid = false;
 		try {
-			bmeCat = schemaFactory.newSchema(new File("/Users/tobias/Documents/workspace/Studium/EBUT_DEV/WholesalerWebDemo/files/bmecat_new_catalog_1_2_simple_V0.96.xsd"));
+			bmeCat = schemaFactory.newSchema(new File("C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd"));//C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd
 			validator = bmeCat.newValidator();
 			//Validate Uploaded XML File
-			
+			validator.validate(new DOMSource(document));
 		} catch (SAXException e) {
-			errorList.add("SCHEMA PROBLEM");
+			errorList.add("The Uploaded XML File is not valid!");
+			e.printStackTrace();
+		} catch (IOException e) {
+			errorList.add("Error while reading DOM");
 			e.printStackTrace();
 		} 
-		try{
-			validator.validate(new DOMSource(document));
-			valid = true;
-		}
-		catch (IOException e) {
-			errorList.add("Error during validation");
-			e.printStackTrace();
-		} catch (SAXException e) {
-			errorList.add("Error Document not valid");
-			e.printStackTrace();
-		}
-		
-		return valid;
 	}
 	
 	public Document createImportFileDOM(InputStream xmlFile, List<String> errorList ){
@@ -126,7 +129,7 @@ public class Import {
 			errorList.add("Error during parser configuration!");
 			e.printStackTrace();
 		} catch (SAXException e) {
-			errorList.add("Error during parsing process!");
+			errorList.add("Document is not well-formed xml!");
 			e.printStackTrace();
 		} catch (IOException e) {
 			errorList.add("Error during upload!");
@@ -141,12 +144,18 @@ public class Import {
 		NodeList suppliers = catalog.getElementsByTagName("SUPPLIER_NAME");
 		
 		//Save Supplier into a List
-		List<BOSupplier> supplierList = SupplierBOA.getInstance().findByCompanyName((suppliers.item(0).getChildNodes().item(0).getNodeValue()));
-		if(!supplierList.isEmpty()){
-			System.out.println("ERREICHT IF ABFRAGE IN GET_SUPPLIER");
-			return supplierList.get(0);
+		if(suppliers.getLength() == 0){
+			//errorList.add("No Supplier found in Document!");
+			System.out.println("No Supplier found in uploaded Document");
+			return null;
 		}
-		return null;
+		List<BOSupplier> supplierList = SupplierBOA.getInstance().findByCompanyName((suppliers.item(0).getChildNodes().item(0).getNodeValue()));
+		if(supplierList.isEmpty()){
+			errorList.add("Supplier not found in DB!");
+			return null;
+		}
+		
+		return supplierList.get(0);
 	}
 	
 	public BOProduct insertProductsIntoDB(Document catalog, List<String> errorList, BOSupplier supplier){
@@ -177,11 +186,12 @@ public class Import {
 			
 			product.setOrderNumberCustomer(supplier_aid.item(0).getChildNodes().item(0).getNodeValue());
 			product.setSupplier(supplier);
+			
 			//If Product is already in DB an error gets thrown, else we save the product inside our DB
 			List<BOProduct> productDB = ProductBOA.getInstance().findByShortdescription(product.getShortDescription());
-			System.out.println(productDB);
+			System.out.println("ITERATION PRODUKTE " + i + ".ter DURCHLAUF : " + productDB.get(0).getShortDescription());
 			if(!productDB.isEmpty()){
-				errorList.add("Product already in DB");
+				errorList.add("Product " + product.getShortDescription() + " already in DB");
 			} else {
 				System.out.println("Product saved "+ product.getShortDescription());
 				ProductBOA.getInstance().saveOrUpdate(product);
