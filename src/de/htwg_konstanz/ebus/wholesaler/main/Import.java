@@ -27,6 +27,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOAddress;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOCountry;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOCurrency;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOProduct;
@@ -44,6 +45,9 @@ public class Import {
 
 	public void load(HttpServletRequest request, List<String> errorList){
 		InputStream importXml = catchFileUpload(request, errorList);
+		if(null == importXml){
+			return;
+		}
 		Document catalog = createImportFileDOM(importXml, errorList);
 		if(catalog != null){
 			validateXml(catalog, errorList);
@@ -84,6 +88,7 @@ public class Import {
 					if(!filename.endsWith(".xml")){
 						errorList.add("Uploaded File is from Type '." + fileExtension + "' but only XML Files are accepted"
 								+ " please select a XML File to upload!" );
+						file=null;
 					}
 				}
 			}
@@ -102,7 +107,8 @@ public class Import {
 		Validator validator = null;
 		Schema bmeCat = null;
 		try {//C:/Users/dominic.DIE-SICKELS/Documents/Studium/5.Semester/EBUT/Labor/Material_Aufgabe_2_Lab_EBUT_WS1415/Material_Aufgabe_2_Lab_EBUT_WS1415/Vereinfachtes_BMEcat1.2_Format/bmecat_new_catalog_1_2_simple_V0.96.xsd
-			bmeCat = schemaFactory.newSchema(new File("C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd"));//C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd
+			///Users/tobias/Documents/workspace/Studium/EBUT_DEV/WholesalerWebDemo/files/bmecat_new_catalog_1_2_simple_without_NS.xsd
+			bmeCat = schemaFactory.newSchema(new File("/Users/tobias/Documents/workspace/Studium/EBUT_DEV/WholesalerWebDemo/files/bmecat_new_catalog_1_2_simple_without_NS.xsd"));//C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd
 			validator = bmeCat.newValidator();
 			//Validate Uploaded XML File
 			validator.validate(new DOMSource(document));
@@ -188,21 +194,29 @@ public class Import {
 			product.setSupplier(supplier);
 			
 			//If Product is already in DB an error gets thrown, else we save the product inside our DB
-			List<BOProduct> productDB = ProductBOA.getInstance().findByShortdescription(product.getShortDescription());
-			System.out.println("ITERATION PRODUKTE " + i + ".ter DURCHLAUF : " + productDB.get(0).getShortDescription());
-			if(!productDB.isEmpty()){
-				errorList.add("Product " + product.getShortDescription() + " already in DB");
-			} else {
-				System.out.println("Product saved "+ product.getShortDescription());
+			List<BOProduct> productDBList = ProductBOA.getInstance().findByShortdescription(product.getShortDescription());
+			//System.out.println("ITERATION PRODUKTE " + i + ".ter DURCHLAUF : " + productDBList.get(0).getShortDescription());
+			if(!productDBList.isEmpty()){
+				deleteProduct(productDBList.get(0));
 				ProductBOA.getInstance().saveOrUpdate(product);
 				insertProductPricesIntoDB(catalog, errorList, product);
+				errorList.add("Product " + product.getShortDescription() + " updated");
+
+			} else {
+				ProductBOA.getInstance().saveOrUpdate(product);
+				insertProductPricesIntoDB(catalog, errorList, product);
+				errorList.add("Product " + product.getShortDescription() + " added");
 			}
-			System.out.println("Product not saved "+ product.getShortDescription());
 		}	
 		_BaseBOA.getInstance().commit();
 		return product;
 	
 		
+	}
+	
+	public void deleteProduct(BOProduct product){
+		ProductBOA.getInstance().delete(product);
+		_BaseBOA.getInstance().commit();
 	}
 	
 	public void insertProductPricesIntoDB(Document catalog, List<String> errorList, BOProduct product){

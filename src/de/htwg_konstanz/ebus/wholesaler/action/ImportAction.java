@@ -34,8 +34,6 @@ public class ImportAction implements IAction{
 			if (Security.getInstance().isUserAllowed(loginBean.getUser(), Security.RESOURCE_ALL, Security.ACTION_READ))
 			{
 				//get ServletContext for relative path
-				ServletContext context = request.getSession().getServletContext();
-				String path = "welcome.jsp";
 				Import upload = new Import();
 				//Catch File upload
 				upload.load(request, errorList);
