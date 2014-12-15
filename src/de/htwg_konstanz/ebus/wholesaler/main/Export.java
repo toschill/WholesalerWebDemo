@@ -301,22 +301,22 @@ public class Export {
 		
 		//Create ORDER_UNIT-Element
 		Element order_unit = document.createElement("ORDER_UNIT");
-		//Insert content for ORDER_UNIT
-		order_unit.insertBefore(document.createTextNode("DEFAULT"), order_unit.getLastChild());
+		//Insert content for ORDER_UNIT --> Text Content has to be a valid value of a given enumaeration
+		order_unit.insertBefore(document.createTextNode("05"), order_unit.getLastChild());
 		//Append ORDER_UNIT to "ARTICLE_ORDER_DETAILS"
 		article_order_details.appendChild(order_unit);
 		
 		//Create CONTENT_UNIT-Element
 		Element content_unit = document.createElement("CONTENT_UNIT");
-		//Insert content for CONTENT_UNIT
-//Optional	order_unit.insertBefore(document.createTextNode("000"), order_unit.getLastChild());
+		//Insert content for CONTENT_UNIT --> Text Content has to be a valid value of a given enumaeration
+		content_unit.insertBefore(document.createTextNode("05"), content_unit.getLastChild());
 		//Append CONTENT_UNIT to "ARTICLE_ORDER_DETAILS"
 		article_order_details.appendChild(content_unit);
 		
 		//Create NO_CU_PER_OU-Element
 		Element no_cu_per_ou = document.createElement("NO_CU_PER_OU");
-		//Insert content for NO_CU_PER_OU
-//Optional	order_unit.insertBefore(document.createTextNode("000"), order_unit.getLastChild());
+		//Insert content for NO_CU_PER_OU --> Text Content has to be a valid value of a given enumaeration
+		no_cu_per_ou.insertBefore(document.createTextNode("05"), no_cu_per_ou.getLastChild());
 		//Append NO_CU_PER_OU to "ARTICLE_ORDER_DETAILS"
 		article_order_details.appendChild(no_cu_per_ou);
 		

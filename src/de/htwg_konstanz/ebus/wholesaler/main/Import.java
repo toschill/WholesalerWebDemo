@@ -101,8 +101,8 @@ public class Import {
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		Validator validator = null;
 		Schema bmeCat = null;
-		try {
-			bmeCat = schemaFactory.newSchema(new File("/Users/tobias/Documents/workspace/Studium/EBUT_DEV/WholesalerWebDemo/files/bmecat_new_catalog_1_2_simple_without_NS.xsd"));//C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd
+		try {//C:/Users/dominic.DIE-SICKELS/Documents/Studium/5.Semester/EBUT/Labor/Material_Aufgabe_2_Lab_EBUT_WS1415/Material_Aufgabe_2_Lab_EBUT_WS1415/Vereinfachtes_BMEcat1.2_Format/bmecat_new_catalog_1_2_simple_V0.96.xsd
+			bmeCat = schemaFactory.newSchema(new File("C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd"));//C:/Users/dominic.DIE-SICKELS/Downloads/bmecat_new_catalog_1_2_simple_without_NS.xsd
 			validator = bmeCat.newValidator();
 			//Validate Uploaded XML File
 			validator.validate(new DOMSource(document));
