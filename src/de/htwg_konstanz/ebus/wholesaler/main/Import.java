@@ -46,14 +46,18 @@ public class Import {
 		InputStream importXml = catchFileUpload(request, errorList);
 		Document catalog = createImportFileDOM(importXml, errorList);
 		if(catalog != null){
-			validateXml(catalog, errorList);
-			BOSupplier supplier = getSupplier(catalog, errorList);
-			if(supplier != null){
-				System.out.println("LOAD SUPPLIER != NULL");
-				insertProductsIntoDB(catalog, errorList, supplier);
+			//if Document not valid stop process
+			if(validateXml(catalog, errorList)){
+				BOSupplier supplier = getSupplier(catalog, errorList);
+				if(supplier != null){
+					System.out.println("LOAD SUPPLIER != NULL");
+					insertProductsIntoDB(catalog, errorList, supplier);
+				} else {
+					//errorList.add("Supplier not found");
+					System.out.println("No supplier found");
+				}
 			} else {
-				//errorList.add("Supplier not found");
-				System.out.println("No supplier found");
+				System.out.println("Dcument not valid!");
 			}
 		} 
 		//Keep only the first error in errorList for user information output
@@ -97,7 +101,8 @@ public class Import {
 		return file;
 	}
 	
-	public void validateXml(Document document, List<String> errorList){
+	public boolean validateXml(Document document, List<String> errorList){
+		boolean isValid = false;
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		Validator validator = null;
 		Schema bmeCat = null;
@@ -106,6 +111,7 @@ public class Import {
 			validator = bmeCat.newValidator();
 			//Validate Uploaded XML File
 			validator.validate(new DOMSource(document));
+			isValid = true;
 		} catch (SAXException e) {
 			errorList.add("The Uploaded XML File is not valid!");
 			e.printStackTrace();
@@ -113,6 +119,8 @@ public class Import {
 			errorList.add("Error while reading DOM");
 			e.printStackTrace();
 		} 
+		
+		return isValid;
 	}
 	
 	public Document createImportFileDOM(InputStream xmlFile, List<String> errorList ){
