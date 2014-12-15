@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.List;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -27,7 +26,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOAddress;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOCountry;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOCurrency;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOProduct;
@@ -60,10 +58,7 @@ public class Import {
 				System.out.println("No supplier found");
 			}
 		} 
-		//Keep only the first error in errorList for user information output
-		/*for(int i = 1; i < errorList.size(); i++){
-			errorList.remove(i);
-		}*/
+
 	}
 	
 	/**
@@ -200,12 +195,12 @@ public class Import {
 				deleteProduct(productDBList.get(0));
 				ProductBOA.getInstance().saveOrUpdate(product);
 				insertProductPricesIntoDB(catalog, errorList, product);
-				errorList.add("Product " + product.getShortDescription() + " updated");
+				errorList.add("INFO: Product " + product.getShortDescription() + " updated");
 
 			} else {
 				ProductBOA.getInstance().saveOrUpdate(product);
 				insertProductPricesIntoDB(catalog, errorList, product);
-				errorList.add("Product " + product.getShortDescription() + " added");
+				errorList.add("INFO: Product " + product.getShortDescription() + " added");
 			}
 		}	
 		_BaseBOA.getInstance().commit();

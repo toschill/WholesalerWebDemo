@@ -62,8 +62,8 @@ public class Export {
 	
 	/**
 	 * Creates the BMECat catalog
-	 * @return catalog
-	 * @throws ParserConfigurationException
+	 * @return document The whole Catalog with <b>all</b> entries
+	 * @throws ParserConfigurationException 
 	 */
 	public static Document createCatalog() throws ParserConfigurationException{
 		List<BOProduct> productList = ProductBOA.getInstance().findAll();
@@ -76,8 +76,10 @@ public class Export {
 	}
 
 	/**
-	 * Creates the BMECat catalog
-	 * @return catalog
+	 * 
+	 * @param errorList The errorList could be used to inform the User
+	 * @param search The search Query to find selected Products
+	 * @return catalog The whole Catalog with <b>Products that match the search String</b> entries
 	 * @throws ParserConfigurationException
 	 */
 	public static Document createSelectedCatalog(ArrayList<String> errorList, String search) throws ParserConfigurationException{
@@ -109,8 +111,10 @@ public class Export {
 		String path ="catalog_export"+userId+".XHTML";
 		File file = new File(context.getRealPath(path));
 		try {
+			// load Transformation
 		TransformerFactory factory = TransformerFactory.newInstance();
 		Transformer transformer;
+		///Users/tobias/Documents/workspace/Studium/EBUT_DEV/WholesalerWebDemo/files/
 		transformer = factory.newTransformer(new StreamSource("/Users/tobias/Documents/workspace/Studium/EBUT_DEV/WholesalerWebDemo/files/transform.xslt"));
 		transformer.transform(new StreamSource(context.getRealPath(pathXML)), new StreamResult(file));
 		} catch (TransformerConfigurationException e) {
@@ -137,9 +141,12 @@ public class Export {
 		String path="catalog_export"+userId+".XML";
 		File file=null;
 		try {
+			//load Transformation
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			//Transformer without xslt because we only want to write the Dom into a file
 			Transformer transformer = transformerFactory.newTransformer();
 			DOMSource source = new DOMSource(doc);
+			//create file
 			file = new File(context.getRealPath(path));
 			StreamResult result = new StreamResult(file);
 			transformer.transform(source, result);
@@ -156,22 +163,21 @@ public class Export {
 	
 	/**
 	 * Creates an empty document
-	 * @return empty document
-	 * @throws ParserConfigurationException
+	 * @return empty document The empty document
+	 * @throws ParserConfigurationException If Document couldn't be created
 	 */
 	public static Document createDocument() throws ParserConfigurationException{
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document document = db.newDocument();
-		
 		return document;
 	}
 	
 	/**
 	 * Creates the Basis of our DOM 
 	 * @param document empty document in which gets filled with the BasisDOM
-	 * @return document with BasisDOM
-	 * @throws ParserConfigurationException
+	 * @return document The BasisDOM Document 
+	 * @throws ParserConfigurationException If Document couldn't be created
 	 */
 	public static Document createBasisDOM(Document document) throws ParserConfigurationException{
 		
@@ -251,7 +257,7 @@ public class Export {
 	 * DOCUMENT NEEDS A T_NEW_CATALOG Attribute
 	 * @param document The BMECAT Document where the Product should be added
 	 * @param bop The Product
-	 * @return
+	 * 
 	 */
 	public static void createArticleDOM(Document document, BOProduct bop){
 		
