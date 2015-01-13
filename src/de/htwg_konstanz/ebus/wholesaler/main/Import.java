@@ -40,7 +40,11 @@ import de.htwg_konstanz.ebus.framework.wholesaler.vo.Country;
 import de.htwg_konstanz.ebus.framework.wholesaler.vo.Currency;
 
 public class Import {
-
+	/**
+	 * Controller for Import
+	 * @param request the Http Request
+	 * @param errorList User Notification
+	 */
 	public void load(HttpServletRequest request, List<String> errorList){
 		InputStream importXml = catchFileUpload(request, errorList);
 		if(null == importXml){
@@ -67,9 +71,9 @@ public class Import {
 	
 	/**
 	 * Creates FileItemFactory and FileUpload to catch the upload request
-	 * @param request 
-	 * @param errorList
-	 * @return
+	 * @param request The Http Request for relative Path
+	 * @param errorList User Notification
+	 * @return Inputstream if successful. null if not successful
 	 */
 	public InputStream catchFileUpload(HttpServletRequest request, List<String> errorList){
 		//Factory and Servlet for FileUpload
@@ -101,6 +105,12 @@ public class Import {
 		return file;
 	}
 	
+	/**
+	 * validates the BME Dom against the bmecat_new_catalog_1_2_simple_without_NS.xsd Doctype 
+	 * @param document the BMECAT
+	 * @param errorList User notification
+	 * @return true if valid, false if not valid
+	 */
 	public boolean validateXml(Document document, List<String> errorList){
 		boolean isValid = false;
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -124,6 +134,12 @@ public class Import {
 		return isValid;
 	}
 	
+	/**
+	 * Create DOM from InputStream
+	 * @param xmlFile the uploaded xmlFile
+	 * @param errorList User notification
+	 * @return the BMECAT document. null on error.
+	 */
 	public Document createImportFileDOM(InputStream xmlFile, List<String> errorList ){
 		Document document = null;
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -146,7 +162,12 @@ public class Import {
 		}
 		return document;
 	}
-		
+	/**
+	 * returns the Supplier from the DB or null if supplier not found
+	 * @param catalog the BMECAT document
+	 * @param errorList User notification
+	 * @return null if supplier is not in DB. the supplier if there was one found
+	 */
 	public BOSupplier getSupplier(Document catalog, List<String> errorList){
 		System.out.println("ERREICHT GET_SUPPLIER");
 		//Supplier in uploaded catalog
@@ -167,6 +188,13 @@ public class Import {
 		return supplierList.get(0);
 	}
 	
+	/**
+	 * inserts the Products from the uploaded catalog into the DB
+	 * @param catalog the BMECAT document
+	 * @param errorList for User notification
+	 * @param supplier the supplier of the product
+	 * @return
+	 */
 	public BOProduct insertProductsIntoDB(Document catalog, List<String> errorList, BOSupplier supplier){
 		System.out.println("ERREICHT INSERT PRODUCT INTO DB");
 		//Get all Articles of the uploaded catalog
@@ -198,30 +226,41 @@ public class Import {
 			
 			//If Product is already in DB an error gets thrown, else we save the product inside our DB
 			List<BOProduct> productDBList = ProductBOA.getInstance().findByShortdescription(product.getShortDescription());
-			//System.out.println("ITERATION PRODUKTE " + i + ".ter DURCHLAUF : " + productDBList.get(0).getShortDescription());
 			if(!productDBList.isEmpty()){
+				//Product already in DB
 				deleteProduct(productDBList.get(0));
 				ProductBOA.getInstance().saveOrUpdate(product);
 				insertProductPricesIntoDB(catalog, errorList, product);
 				errorList.add("INFO: Product " + product.getShortDescription() + " updated");
 
 			} else {
+				//Product not in DB
 				ProductBOA.getInstance().saveOrUpdate(product);
 				insertProductPricesIntoDB(catalog, errorList, product);
 				errorList.add("INFO: Product " + product.getShortDescription() + " added");
 			}
 		}	
+		//always do a commit
 		_BaseBOA.getInstance().commit();
 		return product;
 	
 		
 	}
-	
+	/**
+	 * Deletets the passed product from the DB 
+	 * @param product the product to be deleted
+	 */
 	public void deleteProduct(BOProduct product){
 		ProductBOA.getInstance().delete(product);
 		_BaseBOA.getInstance().commit();
 	}
 	
+	/**
+	 * Inserts the Prices for the DB into the DB
+	 * @param catalog the BMECAT document
+	 * @param errorList User notification List
+	 * @param product the Product for that the prices will be added
+	 */
 	public void insertProductPricesIntoDB(Document catalog, List<String> errorList, BOProduct product){
 		
 		BOSalesPrice salesPrice = new BOSalesPrice();
@@ -269,6 +308,7 @@ public class Import {
 			//Save Prices in DB
 			PriceBOA.getInstance().saveOrUpdatePurchasePrice(purchasePrice);
 			PriceBOA.getInstance().saveOrUpdateSalesPrice(salesPrice);
+			//always commit
 			_BaseBOA.getInstance().commit();
 		}
 	}

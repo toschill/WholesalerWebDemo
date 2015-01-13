@@ -94,7 +94,7 @@ public class Export {
 			}
 		}
 		if(!foundOne){
-			errorList.add("Es wurde kein Artikel gefunden, dessen Kurzbeschreibung " +search+ " enthält");
+			errorList.add("No article with given description: " +search+ " found");
 		}
 		return document;
 	}
