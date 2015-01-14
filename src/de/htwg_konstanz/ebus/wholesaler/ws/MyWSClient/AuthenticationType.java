@@ -17,9 +17,9 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element ref="{http://new.webservice.namespace}wholesalerName"/>
- *         &lt;element ref="{http://new.webservice.namespace}wsUsername"/>
- *         &lt;element ref="{http://new.webservice.namespace}wsPassword"/>
+ *         &lt;element name="wholesalerName" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="wsUsername" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="wsPassword" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>

@@ -17,8 +17,8 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element ref="{http://new.webservice.namespace}authentication"/>
- *         &lt;element ref="{http://new.webservice.namespace}listOfProducts"/>
+ *         &lt;element name="authentication" type="{http://new.webservice.namespace}authenticationType"/>
+ *         &lt;element name="listOfProducts" type="{http://new.webservice.namespace}listOfProductsType"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>

@@ -57,6 +57,7 @@ public class ListOfUpdatedProductsType {
      * 
      * 
      */
+
     public List<SupplierProductType> getSupplierProduct() {
         if (supplierProduct == null) {
             supplierProduct = new ArrayList<SupplierProductType>();

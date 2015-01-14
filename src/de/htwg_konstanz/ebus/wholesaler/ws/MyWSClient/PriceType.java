@@ -19,12 +19,12 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element ref="{http://new.webservice.namespace}amount"/>
- *         &lt;element ref="{http://new.webservice.namespace}currency"/>
- *         &lt;element ref="{http://new.webservice.namespace}tax"/>
- *         &lt;element ref="{http://new.webservice.namespace}pricetype"/>
- *         &lt;element ref="{http://new.webservice.namespace}countryISOCode"/>
- *         &lt;element ref="{http://new.webservice.namespace}lowerBound"/>
+ *         &lt;element name="amount" type="{http://www.w3.org/2001/XMLSchema}decimal"/>
+ *         &lt;element name="currency" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="tax" type="{http://www.w3.org/2001/XMLSchema}decimal"/>
+ *         &lt;element name="pricetype" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="countryISOCode" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="lowerBound" type="{http://www.w3.org/2001/XMLSchema}integer"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>

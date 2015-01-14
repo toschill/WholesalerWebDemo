@@ -19,9 +19,9 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element ref="{http://new.webservice.namespace}updateDate"/>
- *         &lt;element ref="{http://new.webservice.namespace}listOfUpdatedProducts"/>
- *         &lt;element ref="{http://new.webservice.namespace}listOfUnavailableProducts"/>
+ *         &lt;element name="updateDate" type="{http://www.w3.org/2001/XMLSchema}date"/>
+ *         &lt;element name="listOfUpdatedProducts" type="{http://new.webservice.namespace}listOfUpdatedProductsType"/>
+ *         &lt;element name="listOfUnavailableProducts" type="{http://new.webservice.namespace}listOfUnavailableProductsType"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
