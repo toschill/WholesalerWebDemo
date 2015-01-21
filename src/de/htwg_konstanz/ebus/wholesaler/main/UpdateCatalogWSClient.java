@@ -16,7 +16,7 @@ import de.htwg_konstanz.ebus.wholesaler.ws.MyWSClient.UpdateCatalogWSService;
 
 public class UpdateCatalogWSClient {
 	public ArrayList<String> errorList;
-	@WebServiceRef(wsdlLocation="http://localhost:8080/WholesalerWebDemo/UpdateCatalog?wsdl")
+	//@WebServiceRef(wsdlLocation="http://localhost:8080/WholesalerWebDemo/UpdateCatalog?wsdl")
 	UpdateCatalogWSService client;
 	
 	ObjectFactory factory = new ObjectFactory();
@@ -31,7 +31,7 @@ public class UpdateCatalogWSClient {
 		client = new UpdateCatalogWSService();
 		
 		UpdateCatalogInterface port =  client.getUpdateCatalogWSPort();
-		AuthenticationType auth = new AuthenticationType();
+		AuthenticationType auth = factory.createAuthenticationType();
 		auth.setWholesalerName("Wholesaler");
 		auth.setWsPassword("password");
 		auth.setWsUsername("user");
