@@ -32,9 +32,9 @@ public class UpdateCatalogWSClient {
 		
 		UpdateCatalogInterface port =  client.getUpdateCatalogWSPort();
 		AuthenticationType auth = factory.createAuthenticationType();
-		auth.setWholesalerName("Wholesaler");
-		auth.setWsPassword("password");
-		auth.setWsUsername("user");
+		auth.setWholesalerName("HTWG Konstanz");
+		auth.setWsPassword("ws_htwg_1");
+		auth.setWsUsername("ws_htwg_1");
 		
 		UpdateCatalogRequestType request = new UpdateCatalogRequestType();
 		ListOfProductsType list = new ListOfProductsType();
@@ -46,11 +46,11 @@ public class UpdateCatalogWSClient {
 		
 		try {
 			response = port.updateCatalog(request);
-			for(SupplierProductType sp : response.getListOfUpdatedProducts().getSupplierProduct()){
+		/*	for(SupplierProductType sp : response.getListOfUpdatedProducts().getSupplierProduct()){
 				errorList.add(sp.getShortDescription());
-			}
+			}*/
 		} catch (AuthenticationFaultMessage e) {
-			System.out.println(e);
+			errorList.add(e.getMessage());
 			e.printStackTrace();
 		}
 	}
