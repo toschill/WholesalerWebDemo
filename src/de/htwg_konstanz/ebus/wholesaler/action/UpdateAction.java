@@ -28,8 +28,9 @@ public class UpdateAction implements IAction{
 			// -> use the "Security.RESOURCE_ALL" constant which includes all resources.
 			if (Security.getInstance().isUserAllowed(loginBean.getUser(), Security.RESOURCE_ALL, Security.ACTION_READ))
 			{
-				//Catch File upload
-				errorList.add("INFO: Synchronized");
+				
+				
+				//errorList.add("INFO: Synchronized");
 				UpdateCatalogWSClient client = new UpdateCatalogWSClient(errorList);
 				client.startClient();
 				return "welcome.jsp";

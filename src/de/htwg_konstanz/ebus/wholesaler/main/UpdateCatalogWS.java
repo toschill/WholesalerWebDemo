@@ -1,6 +1,7 @@
 package de.htwg_konstanz.ebus.wholesaler.main;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -122,8 +123,10 @@ public class UpdateCatalogWS implements UpdateCatalogInterface{
 		response.setListOfUnavailableProducts(unavailableProducts);
 		response.setListOfUpdatedProducts(updatedProducts);
 		
+		
 		GregorianCalendar c = new GregorianCalendar();
-		c.setTime(new Date());
+		//c.setTime(new Date());
+		
 		XMLGregorianCalendar xmlGC = null;
 		try {
 			xmlGC = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
