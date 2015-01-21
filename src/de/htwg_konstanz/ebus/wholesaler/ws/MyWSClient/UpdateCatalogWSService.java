@@ -30,7 +30,7 @@ public class UpdateCatalogWSService
         URL url = null;
         WebServiceException e = null;
         try {
-            url = new URL("http://localhost:8080/WholesalerWebDemo/UpdateCatalog?wsdl");
+            url = new URL("http://141.37.192.3:8080/WholesalerWebDemo/UpdateCatalog?wsdl");
         } catch (MalformedURLException ex) {
             e = new WebServiceException(ex);
         }

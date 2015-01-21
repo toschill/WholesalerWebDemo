@@ -6,6 +6,7 @@ import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOProduct;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.bo.BOSupplier;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.boa.ProductBOA;
 import de.htwg_konstanz.ebus.framework.wholesaler.api.boa.SupplierBOA;
+import de.htwg_konstanz.ebus.framework.wholesaler.api.boa._BaseBOA;
 import de.htwg_konstanz.ebus.wholesaler.ws.MyWSClient.AuthenticationFaultMessage;
 import de.htwg_konstanz.ebus.wholesaler.ws.MyWSClient.AuthenticationType;
 import de.htwg_konstanz.ebus.wholesaler.ws.MyWSClient.ListOfProductsType;
@@ -78,12 +79,28 @@ public class UpdateCatalogWSClient {
 		try {
 			response = port.updateCatalog(request);
 			System.out.println(response.getUpdateDate());
-			for(int i=0; i<response.getListOfUpdatedProducts().getSupplierProduct().size(); i++){
-				System.out.println(response.getListOfUpdatedProducts().getSupplierProduct().get(i).getSupplierAID() + " || " +
-				response.getListOfUpdatedProducts().getSupplierProduct().get(i).getShortDescription() + " || " +
-				response.getListOfUpdatedProducts().getSupplierProduct().get(i).getLongDescription());
-				errorList.add("INFO: "+response.getListOfUpdatedProducts().getSupplierProduct().get(i).getSupplierAID()+" updated");
+			for(SupplierProductType spt : response.getListOfUpdatedProducts().getSupplierProduct()){
+				System.out.println(spt.getShortDescription()+"|"+spt.getLongDescription());
+
+				BOProduct product = new BOProduct();
+				product.setShortDescription(spt.getShortDescription());
+				product.setLongDescription(spt.getLongDescription());
+				product.setOrderNumberSupplier(spt.getSupplierAID());
+				product.setOrderNumberCustomer(spt.getSupplierAID());
+				
+				BOSupplier supplier = SupplierBOA.getInstance().findByCompanyName(Name).get(0);
+				product.setSupplier(supplier);
+				ProductBOA.getInstance().saveOrUpdate(product);
+				_BaseBOA.getInstance().commit();
 			}
+			
+			for(SupplierProductType spt : response.getListOfUnavailableProducts().getSupplierProduct()){
+				BOProduct del = ProductBOA.getInstance().findByOrderNumberSupplier(spt.getSupplierAID());
+				errorList.add("INFO: "+spt.getSupplierAID()+ " deleted");
+				ProductBOA.getInstance().delete(del);
+				_BaseBOA.getInstance().commit();
+			}
+			
 			
 		} catch (AuthenticationFaultMessage e) {
 			errorList.add(e.getMessage());
