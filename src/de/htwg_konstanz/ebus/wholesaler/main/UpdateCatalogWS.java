@@ -98,8 +98,16 @@ public class UpdateCatalogWS implements UpdateCatalogInterface{
 				}
 				if(updated){
 					SupplierProductType updatedProduct= factory.createSupplierProductType();
-					updatedProduct.setShortDescription(productBo.getShortDescriptionCustomer());
-					updatedProduct.setLongDescription(productBo.getLongDescriptionCustomer());
+					if(productBo.getShortDescriptionCustomer() != null){
+						updatedProduct.setShortDescription(productBo.getShortDescriptionCustomer());
+					} else {
+						updatedProduct.setShortDescription(productBo.getShortDescription());
+					}
+					if(productBo.getLongDescriptionCustomer() != null){
+						updatedProduct.setLongDescription(productBo.getLongDescriptionCustomer());
+					} else {
+						updatedProduct.setLongDescription(productBo.getLongDescription());
+					}
 					updatedProducts.getSupplierProduct().add(updatedProduct);
 				}
 			}
@@ -112,11 +120,21 @@ public class UpdateCatalogWS implements UpdateCatalogInterface{
 		for(BOProduct productBo : productBoa.findAll()){
 			if(!aids.contains(productBo.getOrderNumberCustomer())){
 				//produkt nicht in request
-				SupplierProductType updatedProduct= factory.createSupplierProductType();
-				updatedProduct.setSupplierAID(productBo.getOrderNumberCustomer());
-				updatedProduct.setShortDescription(productBo.getShortDescriptionCustomer());
-				updatedProduct.setLongDescription(productBo.getLongDescriptionCustomer());
-				updatedProducts.getSupplierProduct().add(updatedProduct);
+				SupplierProductType unavailableProduct= factory.createSupplierProductType();
+				unavailableProduct.setSupplierAID(productBo.getOrderNumberCustomer());
+				if(productBo.getShortDescriptionCustomer() != null){
+				unavailableProduct.setShortDescription(productBo.getShortDescriptionCustomer());
+				}
+				else{
+					unavailableProduct.setShortDescription(productBo.getShortDescription());
+				}
+				if(productBo.getShortDescriptionCustomer() != null){
+				unavailableProduct.setLongDescription(productBo.getLongDescriptionCustomer());
+				}
+				else{
+					unavailableProduct.setLongDescription(productBo.getLongDescription());
+				}
+				updatedProducts.getSupplierProduct().add(unavailableProduct);
 			}
 		}
 		
