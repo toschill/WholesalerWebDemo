@@ -21,9 +21,9 @@
 <h2>Please choose supplier</h2>
 
 <form id="searchForm" method="post" action="controllerservlet?action=update">
-		<select id="supplier">
+		<select name="supplier">
 			<c:forEach var="supplier" items="${sessionScope.suppliers}">
-				<option value="${supplier.getSupplierNumber()}">${supplier.getCompanyname()}</value>
+				<option value="${supplier.getSupplierNumber()}">${supplier.getCompanyname()}</option>
 			</c:forEach>
 		</select>
 		<input type="submit" value="Update"/>

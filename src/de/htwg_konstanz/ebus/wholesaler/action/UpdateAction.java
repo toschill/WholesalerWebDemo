@@ -34,17 +34,19 @@ public class UpdateAction implements IAction{
 			{
 				String supplier = request.getParameter(Constants.ACTION_UPDATE_SUPPLIER);
 				if(supplier!=null){
-					UpdateCatalogWSClient client = new UpdateCatalogWSClient(errorList);
+					System.out.println(supplier);
+					BOSupplier supplierBo = SupplierBOA.getInstance().findSupplierById(supplier); 
+					UpdateCatalogWSClient client = new UpdateCatalogWSClient(errorList, supplierBo.getWsUserName(), supplierBo.getWsPassword(), supplierBo.getCompanyname());
 					client.startClient();	
 					List<?> supplierList = SupplierBOA.getInstance().findAll(); 
 					request.getSession(true).setAttribute(Constants.PARAM_ORDER_SUPPLIER_LIST, supplierList);
 					return "update.jsp";
 				}else{
+					System.out.println("keine");
 					List<?> supplierList = SupplierBOA.getInstance().findAll(); 
 					request.getSession(true).setAttribute(Constants.PARAM_ORDER_SUPPLIER_LIST, supplierList);
 					return "update.jsp";
 				}
-				
 			}
 			else
 			{
