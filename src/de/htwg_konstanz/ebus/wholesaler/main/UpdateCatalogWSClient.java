@@ -29,13 +29,15 @@ public class UpdateCatalogWSClient {
 	private ProductBOA  productBoa = ProductBOA.getInstance();
 	private String user;
 	private String password;
-	private String Name;
+	private String name;
+	private BOSupplier supplier;
 	
-	public UpdateCatalogWSClient(ArrayList<String> erroList, String user, String password, String Name){
+	public UpdateCatalogWSClient(ArrayList<String> erroList, BOSupplier supplier){
 		this.errorList = erroList;
-		this.user = user;
-		this.password = password;
-		this.Name = Name;
+		this.supplier = supplier;
+		this.user = supplier.getWsUserName();
+		this.password = supplier.getWsPassword();
+		this.name = supplier.getCompanyname();
 	}
 	
 	public void startClient(){
@@ -44,8 +46,8 @@ public class UpdateCatalogWSClient {
 		client = new UpdateCatalogWSService();
 		UpdateCatalogInterface port =  client.getUpdateCatalogWSPort();
 		AuthenticationType auth = factory.createAuthenticationType();
-		System.out.println(Name);
-		auth.setWholesalerName(Name);
+		System.out.println(name);
+		auth.setWholesalerName(name);
 		auth.setWsPassword(password);
 		System.out.println(password);
 		auth.setWsUsername(user);
@@ -57,13 +59,15 @@ public class UpdateCatalogWSClient {
 		
 		
 		for(BOProduct productBo : productBoa.findAll()){
-			SupplierProductType spt = factory.createSupplierProductType();
-			spt.setSupplierAID(productBo.getOrderNumberSupplier());
-			spt.setShortDescription(productBo.getShortDescription());
-			spt.setLongDescription(productBo.getLongDescription());
-		//	System.out.println("Produkte aus DB gelesen:" + productBo.getShortDescription());
-		//	System.out.println(spt.getShortDescription());
-			list.getSupplierProduct().add(spt);
+			if(productBo.getSupplier().equals(supplier)){
+				SupplierProductType spt = factory.createSupplierProductType();
+				spt.setSupplierAID(productBo.getOrderNumberSupplier());
+				spt.setShortDescription(productBo.getShortDescription());
+				spt.setLongDescription(productBo.getLongDescription());
+			//	System.out.println("Produkte aus DB gelesen:" + productBo.getShortDescription());
+			//	System.out.println(spt.getShortDescription());
+				list.getSupplierProduct().add(spt);
+			}
 		}
 		
 		request.setListOfProducts(list);
@@ -88,7 +92,7 @@ public class UpdateCatalogWSClient {
 				product.setOrderNumberSupplier(spt.getSupplierAID());
 				product.setOrderNumberCustomer(spt.getSupplierAID());
 				
-				BOSupplier supplier = SupplierBOA.getInstance().findByCompanyName(Name).get(0);
+				BOSupplier supplier = SupplierBOA.getInstance().findByCompanyName(name).get(0);
 				product.setSupplier(supplier);
 				ProductBOA.getInstance().saveOrUpdate(product);
 				_BaseBOA.getInstance().commit();
@@ -105,6 +109,7 @@ public class UpdateCatalogWSClient {
 		} catch (AuthenticationFaultMessage e) {
 			errorList.add(e.getMessage());
 			e.printStackTrace();
-		}
+		} 
+		
 	}
 }

@@ -32,11 +32,12 @@ public class UpdateAction implements IAction{
 			// -> use the "Security.RESOURCE_ALL" constant which includes all resources.
 			if (Security.getInstance().isUserAllowed(loginBean.getUser(), Security.RESOURCE_ALL, Security.ACTION_READ))
 			{
+				
 				String supplier = request.getParameter(Constants.ACTION_UPDATE_SUPPLIER);
 				if(supplier!=null){
 					System.out.println(supplier);
 					BOSupplier supplierBo = SupplierBOA.getInstance().findSupplierById(supplier); 
-					UpdateCatalogWSClient client = new UpdateCatalogWSClient(errorList, supplierBo.getWsUserName(), supplierBo.getWsPassword(), supplierBo.getCompanyname());
+					UpdateCatalogWSClient client = new UpdateCatalogWSClient(errorList, supplierBo);
 					client.startClient();	
 					List<?> supplierList = SupplierBOA.getInstance().findAll(); 
 					request.getSession(true).setAttribute(Constants.PARAM_ORDER_SUPPLIER_LIST, supplierList);

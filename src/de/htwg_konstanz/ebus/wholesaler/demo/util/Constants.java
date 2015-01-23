@@ -29,6 +29,8 @@ public class Constants
 	public static final String ACTION_UPDATE = "update";
 	public static final String ACTION_UPDATE_SUPPLIER = "supplier";
 	public static final String PARAM_ORDER_SUPPLIER_LIST = "suppliers";
+	public static final String PARAM_ERROR = "error";
+
 
 
 	//Constants for Import and Export

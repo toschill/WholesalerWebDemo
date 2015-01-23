@@ -13,7 +13,7 @@
 <body>
 
 <%@ include file="header.jsp" %>
-<%@ include file="error.jsp" %>
+<%@ include file="error_update.jsp" %>
 <%@ include file="authentication.jsp" %>
 <%@ include file="navigation.jspfragment" %>
 
